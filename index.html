@@ -41,15 +41,8 @@
     <div id="root"></div>
 
     <script type="text/babel">
-        // URL Web App Apps Script anda yang disambungkan ke Google Sheet
+        // Pautan Apps Script Rasmi Anda
         const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbz6mGf_m7gCc3uKzEOcl7sDmsmx7fSUCVE_5K4fU5rlj9Y_tzNo1OdLSI4uGS4j2nrD7Q/exec";
-
-        // Fallback senarai guru sekiranya sambungan internet atau sheet menghadapi masalah
-        const FALLBACK_TEACHERS = [
-            { id: "t1", name: "ARIFAH HUSNA BINTI AZIZ", ic_last4: "5954", role: "guru" },
-            { id: "t2", name: "CHE SITI NORIDA BINTI CHE ISMAIL", ic_last4: "5376", role: "guru" },
-            { id: "t9", name: "HASRIL AMIR BIN HASHIM @ ISMAIL", ic_last4: "5007", role: "admin" }
-        ];
 
         const DUTIES = [
             { id: 1, title: "MENGURUS PERHIMPUNAN PAGI DAN CATATAN", short: "Perhimpunan" },
@@ -58,6 +51,14 @@
             { id: 4, title: "RONDAAN BLOK, SURAU DAN TANDAS", short: "Rondaan" },
             { id: 5, title: "LAPORAN KEHADIRAN, SAKIT DAN AKTIVITI", short: "Kehadiran & Aktiviti" }
         ];
+
+        // Global handlePrint function to fix browser scope issues
+        window.handlePrint = function() {
+            setTimeout(() => {
+                window.focus();
+                window.print();
+            }, 200);
+        };
 
         const LoginScreen = ({ onLogin, teachers, loading }) => {
             const [selectedId, setSelectedId] = React.useState('');
@@ -85,49 +86,52 @@
                             <p className="text-slate-500 font-medium">Sistem Laporan Guru Bertugas</p>
                         </div>
                         
-                        {loading && (
-                            <div className="text-center py-3 mb-4 text-xs bg-teal-50 text-teal-700 rounded-lg font-medium animate-pulse border border-teal-200">
-                                Memuat turun pangkalan data senarai guru...
+                        {loading ? (
+                            <div className="text-center py-4 mb-4 text-sm bg-teal-50 text-teal-700 rounded-lg font-medium animate-pulse border border-teal-200 flex flex-col items-center gap-2">
+                                <i className="ph-bold ph-spinner animate-spin text-2xl"></i>
+                                Memuat turun pangkalan data dari Google Sheet...
                             </div>
-                        )}
+                        ) : (
+                            <>
+                                {error && (
+                                    <div className="bg-red-50 text-red-600 p-3 rounded-lg mb-6 text-sm flex items-center gap-2 border border-red-200">
+                                        <i className="ph-fill ph-warning-circle text-lg"></i> {error}
+                                    </div>
+                                )}
 
-                        {error && (
-                            <div className="bg-red-50 text-red-600 p-3 rounded-lg mb-6 text-sm flex items-center gap-2 border border-red-200">
-                                <i className="ph-fill ph-warning-circle text-lg"></i> {error}
-                            </div>
+                                <form onSubmit={handleLogin} className="space-y-5">
+                                    <div>
+                                        <label className="block text-sm font-bold text-slate-700 mb-2">Pilih Nama Guru / Staf</label>
+                                        <select 
+                                            className="w-full border border-slate-300 rounded-lg p-3 bg-slate-50 outline-none focus:ring-2 focus:ring-teal-500 focus:bg-white transition"
+                                            value={selectedId}
+                                            onChange={(e) => setSelectedId(e.target.value)}
+                                            required
+                                        >
+                                            <option value="" disabled>-- Sila Pilih Nama Anda --</option>
+                                            {teachers.map(t => (
+                                                <option key={t.id} value={t.id}>{t.name} {t.role === 'admin' ? '(Admin)' : ''}</option>
+                                            ))}
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm font-bold text-slate-700 mb-2">4 Digit Akhir Kad Pengenalan</label>
+                                        <input 
+                                            type="password"
+                                            maxLength="4"
+                                            placeholder="Cth: 5954"
+                                            className="w-full border border-slate-300 rounded-lg p-3 bg-slate-50 outline-none focus:ring-2 focus:ring-teal-500 focus:bg-white transition"
+                                            value={ic}
+                                            onChange={(e) => setIc(e.target.value)}
+                                            required
+                                        />
+                                    </div>
+                                    <button type="submit" className="w-full bg-teal-600 hover:bg-teal-700 text-white font-bold py-3 px-4 rounded-lg shadow-md transition-colors flex justify-center items-center gap-2 mt-4">
+                                        <i className="ph-bold ph-sign-in text-lg"></i> Log Masuk Aplikasi
+                                    </button>
+                                </form>
+                            </>
                         )}
-
-                        <form onSubmit={handleLogin} className="space-y-5">
-                            <div>
-                                <label className="block text-sm font-bold text-slate-700 mb-2">Pilih Nama Guru / Staf</label>
-                                <select 
-                                    className="w-full border border-slate-300 rounded-lg p-3 bg-slate-50 outline-none focus:ring-2 focus:ring-teal-500 focus:bg-white transition"
-                                    value={selectedId}
-                                    onChange={(e) => setSelectedId(e.target.value)}
-                                    required
-                                >
-                                    <option value="" disabled>-- Sila Pilih Nama Anda --</option>
-                                    {teachers.map(t => (
-                                        <option key={t.id} value={t.id}>{t.name} {t.role === 'admin' ? '(Admin)' : ''}</option>
-                                    ))}
-                                </select>
-                            </div>
-                            <div>
-                                <label className="block text-sm font-bold text-slate-700 mb-2">4 Digit Akhir Kad Pengenalan</label>
-                                <input 
-                                    type="password"
-                                    maxLength="4"
-                                    placeholder="Cth: 5954"
-                                    className="w-full border border-slate-300 rounded-lg p-3 bg-slate-50 outline-none focus:ring-2 focus:ring-teal-500 focus:bg-white transition"
-                                    value={ic}
-                                    onChange={(e) => setIc(e.target.value)}
-                                    required
-                                />
-                            </div>
-                            <button type="submit" className="w-full bg-teal-600 hover:bg-teal-700 text-white font-bold py-3 px-4 rounded-lg shadow-md transition-colors flex justify-center items-center gap-2 mt-4">
-                                <i className="ph-bold ph-sign-in text-lg"></i> Log Masuk Aplikasi
-                            </button>
-                        </form>
                     </div>
                 </div>
             );
@@ -166,7 +170,7 @@
                 if (file) {
                     const reader = new FileReader();
                     reader.onloadend = () => setImagePreview(reader.result);
-                    reader.readAsDataURL(file);
+                    reader.readAsDataURL(file); // This creates the base64 string
                 }
             };
 
@@ -194,7 +198,7 @@
         };
 
         const App = () => {
-            const [teachers, setTeachers] = React.useState(FALLBACK_TEACHERS);
+            const [teachers, setTeachers] = React.useState([]);
             const [loadingTeachers, setLoadingTeachers] = React.useState(true);
             const [currentUser, setCurrentUser] = React.useState(null);
             const [reports, setReports] = React.useState({});
@@ -202,23 +206,29 @@
             const [selectedDate, setSelectedDate] = React.useState(new Date().toISOString().split('T')[0]);
             const [toastMessage, setToastMessage] = React.useState(null);
             
-            // Tarik data guru sebenar dari Google Sheet apabila aplikasi dibuka
+            // Tarik data guru dan laporan sedia ada dari Google Sheet apabila aplikasi dibuka
             React.useEffect(() => {
                 if (GOOGLE_SCRIPT_URL) {
                     fetch(GOOGLE_SCRIPT_URL)
                         .then(res => res.json())
                         .then(data => {
-                            if (Array.isArray(data) && data.length > 0) {
-                                setTeachers(data);
+                            // Kod backend yang dikemas kini mengembalikan {teachers: [], reports: {}}
+                            if (data.teachers && Array.isArray(data.teachers)) {
+                                setTeachers(data.teachers);
+                            } else if (Array.isArray(data)) {
+                                setTeachers(data); // Fallback ke struktur lama
                             }
+
+                            if (data.reports) {
+                                setReports(data.reports);
+                            }
+                            
                             setLoadingTeachers(false);
                         })
                         .catch(err => {
-                            console.error("Gagal muat senarai guru:", err);
+                            console.error("Gagal muat data dari Google Sheet:", err);
                             setLoadingTeachers(false);
                         });
-                } else {
-                    setLoadingTeachers(false);
                 }
             }, []);
 
@@ -244,7 +254,7 @@
             };
 
             const saveReport = async (date, dutyId, data) => {
-                // Simpan secara lokal dalam state
+                // Simpan secara lokal dalam state supaya UI bertukar serta merta
                 setReports(prev => {
                     const existingDay = prev[date] || { 
                         date: date, 
@@ -282,9 +292,9 @@
                     return { ...prev, [date]: newDay };
                 });
                 
-                showToast("Laporan tugasan berjaya disimpan!");
+                showToast("Laporan sedang dihantar ke Google Sheet...");
 
-                // Hantar data ke Google Sheet & Google Drive secara background
+                // Hantar data ke Google Sheet
                 if (GOOGLE_SCRIPT_URL) {
                     try {
                         const payload = {
@@ -303,6 +313,8 @@
                             headers: { "Content-Type": "application/json" },
                             body: JSON.stringify(payload)
                         });
+                        // Disebabkan mode 'no-cors', kita tak dapat respon 'success'
+                        // Oleh itu kita terus anggap ia diproses. 
                     } catch (e) {
                         console.error("Gagal hantar ke Google Sheet backend:", e);
                     }
@@ -390,11 +402,13 @@
                                 date={selectedDate}
                                 user={currentUser}
                                 onSaveComment={(comment) => {
+                                    // Ulasan disimpan secara lokal sahaja buat masa ini, 
+                                    // Untuk update ke google sheet perlukan endpoint khas di apps script
                                     setReports(prev => ({
                                         ...prev,
                                         [selectedDate]: { ...prev[selectedDate], admin_comment: comment, status: 'reviewed' }
                                     }));
-                                    showToast("Ulasan pentadbir berjaya disimpan!");
+                                    showToast("Ulasan pentadbir berjaya disimpan pada peranti ini!");
                                 }}
                             />
                         )}
@@ -475,7 +489,7 @@
                             <i className="ph-fill ph-check-circle text-2xl text-amber-500"></i>
                             <div>
                                 <h4 className="font-bold">Laporan Telah Dihantar</h4>
-                                <p className="text-sm mt-1">Anda telah menghantar laporan untuk tugasan ini pada tarikh tersebut. Hantar semula jika ingin mengemas kini.</p>
+                                <p className="text-sm mt-1">Anda telah menghantar laporan untuk tugasan ini pada tarikh tersebut. Hantar semula jika ingin mengemas kini (override).</p>
                             </div>
                         </div>
                     )}
@@ -487,7 +501,7 @@
                                 <h4 className="font-bold text-lg">Tugasan Telah Diisi</h4>
                                 <p className="text-sm mt-1 leading-relaxed">
                                     Maaf, tugasan ini telah dilengkapkan oleh <strong className="text-red-900 border-b border-red-300">{existingReport.teacherName}</strong> pada tarikh ini. 
-                                    Sila pilih tugasan atau tarikh lain.
+                                    Sila pilih tugasan atau tarikh lain untuk mengelakkan pertindihan data.
                                 </p>
                             </div>
                         </div>
@@ -512,20 +526,9 @@
 
                             {dutyId === 2 && (
                                 <FormSection title="Kawalan Pintu Masuk Pagi" icon="ph-door">
-                                    <RadioGroup 
-                                        label="Status Kawalan" 
-                                        options={['Terkawal', 'Sederhana', 'Tidak Terkawal']} 
-                                        value={taskData.status || ''} 
-                                        onChange={v => setTaskData({...taskData, status: v})} 
-                                    />
+                                    <RadioGroup label="Status Kawalan" options={['Terkawal', 'Sederhana', 'Tidak Terkawal']} value={taskData.status || ''} onChange={v => setTaskData({...taskData, status: v})} />
                                     <label className="block text-sm font-semibold text-slate-700 mb-2 mt-4">Laporan / Isu</label>
-                                    <textarea 
-                                        rows="4"
-                                        className="w-full border border-slate-300 rounded-lg p-3 bg-slate-50 focus:bg-white focus:ring-2 focus:ring-teal-500 outline-none"
-                                        placeholder="Masih terdapat pelajar tidak memakai t-shirt badan beruniform..."
-                                        value={taskData.notes || ''}
-                                        onChange={e => setTaskData({...taskData, notes: e.target.value})}
-                                    ></textarea>
+                                    <textarea rows="4" className="w-full border border-slate-300 rounded-lg p-3 bg-slate-50 focus:bg-white focus:ring-2 focus:ring-teal-500 outline-none" placeholder="Masih terdapat pelajar tidak memakai t-shirt badan beruniform..." value={taskData.notes || ''} onChange={e => setTaskData({...taskData, notes: e.target.value})}></textarea>
                                     <ImageUpload imagePreview={imagePreview} setImagePreview={setImagePreview} label="Gambar Pintu Masuk" />
                                 </FormSection>
                             )}
@@ -635,7 +638,7 @@
                             </thead>
                             <tbody>
                                 {reportList.length === 0 ? (
-                                    <tr><td colSpan="5" className="p-8 text-center text-slate-500">Tiada laporan direkodkan lagi.</td></tr>
+                                    <tr><td colSpan="5" className="p-8 text-center text-slate-500">Tiada laporan direkodkan lagi di pelayan.</td></tr>
                                 ) : (
                                     reportList.map(r => {
                                         const tasksDone = Object.keys(r.tasks || {}).length;
@@ -683,11 +686,11 @@
         const CombinedReport = ({ reportData, date, onSaveComment, user }) => {
             const [comment, setComment] = React.useState(reportData?.admin_comment || '');
             
-            if (!reportData) return <div className="text-center p-10">Laporan tidak ditemui. Sila lengkapkan laporan pada tarikh ini terlebih dahulu.</div>;
+            if (!reportData) return <div className="text-center p-10">Laporan tidak ditemui.</div>;
 
             const renderText = (text) => {
                 if (!text) return <span className="text-slate-400 italic">Tiada catatan</span>;
-                return text.split('\n').map((line, i) => <React.Fragment key={i}>{line}<br/></React.Fragment>);
+                return String(text).split('\n').map((line, i) => <React.Fragment key={i}>{line}<br/></React.Fragment>);
             };
 
             const t5 = reportData.tasks[5] || {};
@@ -699,7 +702,7 @@
             return (
                 <div className="max-w-4xl mx-auto pb-20 relative">
                     <div className="flex justify-end mb-6 no-print sticky top-4 z-10">
-                        <button onClick={() => window.print()} className="bg-slate-800 text-white px-6 py-2.5 rounded shadow-lg flex items-center gap-2 hover:bg-slate-700 font-bold transition transform hover:-translate-y-1">
+                        <button onClick={window.handlePrint} title="Tekan Ctrl+P (Windows) atau Cmd+P (Mac) jika butang ini tidak berfungsi" className="bg-slate-800 text-white px-6 py-2.5 rounded shadow-lg flex items-center gap-2 hover:bg-slate-700 font-bold transition transform hover:-translate-y-1">
                             <i className="ph-bold ph-printer text-xl"></i> Cetak Laporan
                         </button>
                     </div>
