@@ -520,14 +520,36 @@
                                 reportData={reports[selectedDate]} 
                                 date={selectedDate}
                                 user={currentUser}
-                                onSaveComment={(comment) => {
-                                    // Ulasan disimpan secara lokal sahaja buat masa ini, 
-                                    // Untuk update ke google sheet perlukan endpoint khas di apps script
-                                    setReports(prev => ({
-                                        ...prev,
-                                        [selectedDate]: { ...prev[selectedDate], admin_comment: comment, status: 'reviewed' }
-                                    }));
-                                    showToast("Ulasan pentadbir berjaya disimpan pada peranti ini!");
+                                                             onSaveComment={async (comment) => {
+                                    showToast("Menyimpan ulasan pentadbir...");
+                                    try {
+                                        const payload = {
+                                            action: "SAVE_COMMENT",
+                                            date: selectedDate,
+                                            day: reports[selectedDate]?.day || "",
+                                            week: reports[selectedDate]?.week || "",
+                                            comment: comment,
+                                            adminName: currentUser.name
+                                        };
+
+                                        await fetch(GOOGLE_SCRIPT_URL, {
+                                            method: 'POST',
+                                            mode: 'no-cors',
+                                            headers: {
+                                                'Content-Type': 'text/plain;charset=utf-8'
+                                            },
+                                            body: JSON.stringify(payload)
+                                        });
+
+                                        setReports(prev => ({
+                                            ...prev,
+                                            [selectedDate]: { ...prev[selectedDate], admin_comment: comment, status: 'reviewed' }
+                                        }));
+                                        showToast("Ulasan pentadbir berjaya disimpan ke pangkalan data!");
+                                    } catch (err) {
+                                        console.error('Gagal hantar ulasan:', err);
+                                        showToast("Ralat: Gagal menyimpan ulasan ke pelayan.");
+                                    }
                                 }}
                             />
                         )}
@@ -535,7 +557,6 @@
                 </div>
             );
         };
-
         const DutyForm = ({ user, saveReport, reports, getDayName, showToast }) => {
             const [date, setDate] = React.useState(new Date().toISOString().split('T')[0]);
             const [week, setWeek] = React.useState("");
