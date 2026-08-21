@@ -9,7 +9,7 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="Laporan SMKKT">
-    <meta name="theme-color" content="#dc2626">
+    <meta name="theme-color" content="#0f172a">
     <link rel="apple-touch-icon" href="./logo-lagutu.png">
     <link rel="icon" type="image/png" href="./logo-lagutu.png">
 
@@ -20,8 +20,26 @@
     <script src="https://unpkg.com/@phosphor-icons/web"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
-        body { font-family: 'Inter', sans-serif; background-color: #f8fafc; }
-        @media print { .no-print { display: none !important; } }
+        body { 
+            font-family: 'Inter', sans-serif; 
+            background-color: #0f172a; 
+            color: #f1f5f9;
+            background-image: radial-gradient(circle at 50% 0%, #1e1b4b 0%, #0f172a 80%);
+            background-attachment: fixed;
+            min-height: 100vh;
+        }
+        
+        @media print { 
+            body { background-color: white; color: black; background-image: none; }
+            .no-print { display: none !important; } 
+        }
+
+        /* Scrollbar untuk tema gelap */
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: rgba(255,255,255,0.02); }
+        ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.15); border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.25); }
+
         .mobile-table-scroll {
             overflow-x: auto;
             -webkit-overflow-scrolling: touch;
@@ -30,13 +48,48 @@
         .mobile-table-scroll table {
             min-width: 720px;
         }
+
+        /* Utiliti Kaca (Glassmorphism) */
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+        }
+        
+        .glass-input {
+            background: rgba(0, 0, 0, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: #f1f5f9;
+            transition: all 0.3s ease;
+        }
+        
+        .glass-input:focus {
+            background: rgba(0, 0, 0, 0.4);
+            border-color: #818cf8; /* Pastel Indigo */
+            outline: none;
+            box-shadow: 0 0 0 2px rgba(129, 140, 248, 0.2);
+        }
+
         @media (max-width: 767px) {
             .mobile-report-card {
-                border: 1px solid #e2e8f0;
+                border: 1px solid rgba(255,255,255,0.1);
                 border-radius: 0.9rem;
                 padding: 1rem;
-                background: #fff;
+                background: rgba(255, 255, 255, 0.03);
+                backdrop-filter: blur(10px);
             }
+        }
+
+        /* Gaya Checkbox Khas (Tema Pastel) */
+        .custom-checkbox input:checked + div {
+            background-color: #818cf8; /* Pastel Indigo */
+            border-color: #818cf8;
+            box-shadow: 0 0 10px rgba(129, 140, 248, 0.4);
+        }
+        .custom-checkbox input:checked + div svg {
+            display: block;
         }
     </style>
 </head>
@@ -53,6 +106,15 @@
             { id: 3, title: "KAWALAN WAKTU REHAT DI KANTIN", short: "Kantin/Rehat" },
             { id: 4, title: "RONDAAN BLOK, SURAU DAN TANDAS", short: "Rondaan" },
             { id: 5, title: "LAPORAN KEHADIRAN, SAKIT DAN AKTIVITI", short: "Kehadiran & Aktiviti" }
+        ];
+
+        const AKTIVITI_OPTIONS = [
+            "PERJUMPAAN RUMAH SUKAN",
+            "PERJUMPAAN BADAN BERUNIFORM",
+            "PERJUMPAAN 1 MURID 1 SUKAN",
+            "PERJUMPAAN KELAB DAN PERSATUAN",
+            "PERJUMPAAN SECARA ONLINE",
+            "KELAS TAMBAHAN TINGKATAN 4 DAN 5"
         ];
 
         window.handlePrint = function() {
@@ -78,56 +140,57 @@
             };
 
             return (
-                <div className="min-h-screen flex items-center justify-center p-4 bg-slate-900 relative">
-                    <div className="absolute inset-0 bg-black opacity-80 z-0"></div>
-                    <div className="bg-white rounded-2xl shadow-2xl p-8 w-full max-w-md relative z-10 overflow-hidden border-t-8 border-red-600">
-                        <div className="text-center mb-6">
-                            <img src="./LOGO-SMKKT.png" alt="Logo Sekolah" className="w-24 h-24 mx-auto mb-3 object-contain" />
-                            <h2 className="text-2xl font-bold text-slate-800 tracking-tight">SMK KEM TERENDAK</h2>
-                            <p className="text-red-600 font-bold text-xs uppercase tracking-wider mt-1">Sistem Laporan Guru Bertugas</p>
+                <div className="min-h-screen flex items-center justify-center p-4 relative">
+                    <div className="glass-panel rounded-2xl p-8 w-full max-w-md relative z-10 overflow-hidden">
+                        <div className="text-center mb-8">
+                            <div className="w-24 h-24 mx-auto mb-4 bg-white/10 rounded-full p-2 backdrop-blur-sm shadow-[0_0_20px_rgba(255,255,255,0.05)] flex items-center justify-center">
+                                <img src="./LOGO-SMKKT.png" alt="Logo Sekolah" className="w-full h-full object-contain drop-shadow-md" />
+                            </div>
+                            <h2 className="text-2xl font-bold text-white tracking-tight">SMK KEM TERENDAK</h2>
+                            <p className="text-indigo-300 font-bold text-xs uppercase tracking-wider mt-1">Sistem Laporan Guru Bertugas</p>
                         </div>
                         
                         {loading ? (
-                            <div className="text-center py-4 mb-4 text-sm bg-red-50 text-red-700 rounded-lg font-medium animate-pulse border border-red-200 flex flex-col items-center gap-2">
+                            <div className="text-center py-4 mb-4 text-sm glass-panel bg-indigo-500/10 text-indigo-200 rounded-lg font-medium animate-pulse flex flex-col items-center gap-2 border-indigo-500/30">
                                 <i className="ph-bold ph-spinner animate-spin text-2xl"></i>
-                                Memuat turun pangkalan data dari Google Sheet...
+                                Memuat turun pangkalan data...
                             </div>
                         ) : (
                             <>
                                 {error && (
-                                    <div className="bg-red-50 text-red-600 p-3 rounded-lg mb-6 text-sm flex items-center gap-2 border border-red-200">
+                                    <div className="glass-panel bg-rose-500/20 text-rose-200 p-3 rounded-lg mb-6 text-sm flex items-center gap-2 border-rose-500/30">
                                         <i className="ph-fill ph-warning-circle text-lg"></i> {error}
                                     </div>
                                 )}
 
-                                <form onSubmit={handleLogin} className="space-y-4">
+                                <form onSubmit={handleLogin} className="space-y-5">
                                     <div>
-                                        <label className="block text-sm font-bold text-slate-700 mb-2">Pilih Nama Guru / Staf</label>
+                                        <label className="block text-sm font-semibold text-slate-300 mb-2">Pilih Nama Guru / Staf</label>
                                         <select 
-                                            className="w-full border border-slate-300 rounded-lg p-3 bg-slate-50 outline-none focus:ring-2 focus:ring-red-600 focus:bg-white transition text-sm font-medium"
+                                            className="w-full glass-input rounded-lg p-3 text-sm font-medium"
                                             value={selectedId}
                                             onChange={(e) => setSelectedId(e.target.value)}
                                             required
                                         >
-                                            <option value="" disabled>-- Sila Pilih Nama Anda --</option>
+                                            <option value="" disabled className="text-slate-800">-- Sila Pilih Nama Anda --</option>
                                             {teachers.map(t => (
-                                                <option key={t.id} value={t.id}>{t.name} {t.role === 'admin' ? '(Admin)' : ''}</option>
+                                                <option key={t.id} value={t.id} className="text-slate-800">{t.name} {t.role === 'admin' ? '(Admin)' : ''}</option>
                                             ))}
                                         </select>
                                     </div>
                                     <div>
-                                        <label className="block text-sm font-bold text-slate-700 mb-2">4 Digit Akhir Kad Pengenalan</label>
+                                        <label className="block text-sm font-semibold text-slate-300 mb-2">4 Digit Akhir Kad Pengenalan</label>
                                         <input 
                                             type="password"
                                             maxLength="4"
                                             placeholder="Cth: 5954"
-                                            className="w-full border border-slate-300 rounded-lg p-3 bg-slate-50 outline-none focus:ring-2 focus:ring-red-600 focus:bg-white transition text-sm"
+                                            className="w-full glass-input rounded-lg p-3 text-sm placeholder-slate-500"
                                             value={ic}
                                             onChange={(e) => setIc(e.target.value)}
                                             required
                                         />
                                     </div>
-                                    <button type="submit" className="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-3 px-4 rounded-lg shadow-md transition-colors flex justify-center items-center gap-2 mt-4">
+                                    <button type="submit" className="w-full bg-indigo-500/80 hover:bg-indigo-500 text-white font-bold py-3.5 px-4 rounded-lg shadow-[0_0_20px_rgba(99,102,241,0.3)] border border-indigo-400/50 transition-all flex justify-center items-center gap-2 mt-4 backdrop-blur-sm">
                                         <i className="ph-bold ph-sign-in text-lg"></i> Log Masuk Aplikasi
                                     </button>
                                 </form>
@@ -139,10 +202,10 @@
         };
 
         const FormSection = ({ title, icon, children }) => (
-            <div className="bg-white p-6 md:p-8 rounded-xl shadow-sm border border-slate-200 mt-6 relative overflow-hidden">
-                <div className="absolute top-0 left-0 w-1.5 h-full bg-red-600"></div>
-                <h3 className="text-xl font-bold text-slate-800 mb-5 flex items-center gap-3 border-b pb-3">
-                    <div className="bg-red-50 p-2 rounded-lg text-red-600">
+            <div className="glass-panel p-6 md:p-8 rounded-xl mt-6 relative overflow-hidden">
+                <div className="absolute top-0 left-0 w-1.5 h-full bg-indigo-400"></div>
+                <h3 className="text-xl font-bold text-white mb-6 flex items-center gap-3 border-b border-white/10 pb-4">
+                    <div className="bg-indigo-500/20 p-2.5 rounded-lg text-indigo-300">
                         <i className={`ph-fill ${icon} text-2xl`}></i>
                     </div>
                     {title}
@@ -153,10 +216,10 @@
 
         const RadioGroup = ({ label, options, value, onChange }) => (
             <div>
-                <label className="block text-sm font-bold text-slate-700 mb-2">{label}</label>
+                <label className="block text-sm font-semibold text-slate-300 mb-3">{label}</label>
                 <div className="flex flex-wrap gap-2 md:gap-3">
                     {options.map(opt => (
-                        <label key={opt} className={`cursor-pointer px-4 py-2 rounded border text-sm font-medium transition-all ${value === opt ? 'bg-red-600 text-white border-red-600 shadow-sm' : 'bg-slate-50 text-slate-600 hover:bg-slate-100 border-slate-300'}`}>
+                        <label key={opt} className={`cursor-pointer px-4 py-2 rounded-lg border text-sm font-medium transition-all ${value === opt ? 'bg-indigo-500/40 text-indigo-100 border-indigo-400 shadow-[0_0_15px_rgba(129,140,248,0.2)]' : 'bg-black/20 text-slate-300 hover:bg-white/10 border-white/10'}`}>
                             <input type="radio" className="hidden" name={label} value={opt} checked={value === opt} onChange={() => onChange(opt)} />
                             {opt}
                         </label>
@@ -164,6 +227,95 @@
                 </div>
             </div>
         );
+
+        const CheckboxGroup = ({ label, options, value, onChange }) => {
+            let parsedValues = [];
+            try {
+                parsedValues = value ? JSON.parse(value) : [];
+                if (!Array.isArray(parsedValues)) parsedValues = [];
+            } catch (e) {
+                parsedValues = [{ type: 'other', text: value || '' }];
+            }
+
+            const getSelectedStandardOptions = () => parsedValues.filter(v => v.type === 'standard').map(v => v.text);
+            const getOtherValue = () => {
+                const otherObj = parsedValues.find(v => v.type === 'other');
+                return otherObj ? otherObj.text : '';
+            };
+            const isOtherChecked = () => parsedValues.some(v => v.type === 'other');
+
+            const handleCheckboxChange = (opt, isChecked) => {
+                let newValues = [...parsedValues];
+                if (isChecked) {
+                    if (!newValues.some(v => v.type === 'standard' && v.text === opt)) newValues.push({ type: 'standard', text: opt });
+                } else {
+                    newValues = newValues.filter(v => !(v.type === 'standard' && v.text === opt));
+                }
+                onChange(JSON.stringify(newValues));
+            };
+
+            const handleOtherCheckboxChange = (isChecked) => {
+                 let newValues = [...parsedValues];
+                 if (isChecked) {
+                     if (!newValues.some(v => v.type === 'other')) newValues.push({ type: 'other', text: '' });
+                 } else {
+                     newValues = newValues.filter(v => v.type !== 'other');
+                 }
+                 onChange(JSON.stringify(newValues));
+            };
+
+            const handleOtherTextChange = (text) => {
+                let newValues = [...parsedValues];
+                const otherIndex = newValues.findIndex(v => v.type === 'other');
+                if (otherIndex !== -1) newValues[otherIndex].text = text;
+                else newValues.push({ type: 'other', text: text });
+                onChange(JSON.stringify(newValues));
+            };
+
+            const selectedStandard = getSelectedStandardOptions();
+            const otherChecked = isOtherChecked();
+            const otherText = getOtherValue();
+
+            return (
+                <div className="mt-4">
+                    <label className="block text-sm font-semibold text-slate-300 mb-3 uppercase tracking-wide">{label}</label>
+                    <div className="space-y-3">
+                        {options.map(opt => (
+                            <label key={opt} className="flex items-start gap-3 cursor-pointer group custom-checkbox">
+                                <div className="relative flex items-center justify-center mt-0.5">
+                                    <input type="checkbox" className="sr-only" checked={selectedStandard.includes(opt)} onChange={(e) => handleCheckboxChange(opt, e.target.checked)} />
+                                    <div className="w-5 h-5 border border-white/20 rounded bg-black/20 group-hover:border-indigo-400 transition-colors flex items-center justify-center">
+                                        <svg className="w-3.5 h-3.5 text-white hidden pointer-events-none" viewBox="0 0 14 14" fill="none"><path d="M3 8L6 11L11 3.5" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" stroke="currentColor"></path></svg>
+                                    </div>
+                                </div>
+                                <span className="text-sm font-medium text-slate-300 group-hover:text-white transition-colors">{opt}</span>
+                            </label>
+                        ))}
+                        
+                        <div className="flex flex-col sm:flex-row sm:items-start gap-3 pt-2">
+                            <label className="flex items-center gap-3 cursor-pointer group custom-checkbox shrink-0 mt-1">
+                                <div className="relative flex items-center justify-center">
+                                    <input type="checkbox" className="sr-only" checked={otherChecked} onChange={(e) => handleOtherCheckboxChange(e.target.checked)} />
+                                    <div className="w-5 h-5 border border-white/20 rounded bg-black/20 group-hover:border-indigo-400 transition-colors flex items-center justify-center">
+                                        <svg className="w-3.5 h-3.5 text-white hidden pointer-events-none" viewBox="0 0 14 14" fill="none"><path d="M3 8L6 11L11 3.5" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" stroke="currentColor"></path></svg>
+                                    </div>
+                                </div>
+                                <span className="text-sm font-medium text-slate-300 group-hover:text-white">Lain-lain:</span>
+                            </label>
+                            
+                            <textarea 
+                                rows="2"
+                                className={`w-full glass-input border-white/20 outline-none text-sm p-2 rounded transition-colors resize-y min-h-[40px] ${!otherChecked ? 'opacity-40 cursor-not-allowed' : ''}`}
+                                placeholder="Sila nyatakan (boleh lebih dari satu baris)..."
+                                value={otherText}
+                                onChange={(e) => handleOtherTextChange(e.target.value)}
+                                disabled={!otherChecked}
+                            ></textarea>
+                        </div>
+                    </div>
+                </div>
+            );
+        };
 
         const ImageUpload = ({ imagePreview, setImagePreview, label }) => {
             const MAX_ORIGINAL_SIZE_MB = 5;
@@ -214,43 +366,32 @@
                         return;
                     }
                     if (file.size > MAX_ORIGINAL_SIZE) {
-                        const proceed = window.confirm(
-                            `Saiz gambar yang dipilih ialah ${formatFileSize(file.size)}.\n\n` +
-                            `Had yang disyorkan ialah ${MAX_ORIGINAL_SIZE_MB} MB.\n` +
-                            `Sistem akan mengecilkan gambar secara automatik sebelum dihantar.\n\nTeruskan?`
-                        );
-                        if (!proceed) {
-                            e.target.value = '';
-                            return;
-                        }
+                        const proceed = window.confirm(`Saiz gambar ialah ${formatFileSize(file.size)}. Sistem akan mengecilkan gambar secara automatik.\n\nTeruskan?`);
+                        if (!proceed) { e.target.value = ''; return; }
                     }
                     const result = await compressImage(file);
                     setImagePreview(result.dataUrl);
                 } catch (error) {
-                    console.error('Gagal proses gambar:', error);
-                    alert('Gambar gagal diproses. Sila cuba gambar lain.');
+                    alert('Gambar gagal diproses.');
                     e.target.value = '';
                 }
             };
 
             return (
-                <div className="mt-6 border-t border-slate-100 pt-4">
-                    <label className="block text-sm font-bold text-slate-700 mb-2">{label}</label>
-                    <p className="text-xs text-slate-500 mb-3">
-                        Saiz fail asal disyorkan ≤ {MAX_ORIGINAL_SIZE_MB} MB. Gambar besar akan dikecilkan secara automatik.
-                    </p>
+                <div className="mt-8 border-t border-white/10 pt-6">
+                    <label className="block text-sm font-semibold text-slate-300 mb-2">{label}</label>
+                    <p className="text-xs text-slate-400 mb-4">Saiz disyorkan ≤ {MAX_ORIGINAL_SIZE_MB} MB. Gambar besar akan dikecilkan secara automatik.</p>
                     <div className="flex flex-col sm:flex-row items-start gap-4">
-                        <label className="cursor-pointer bg-slate-50 border-2 border-dashed border-slate-300 hover:border-red-600 rounded-lg p-6 flex flex-col items-center justify-center w-full sm:w-1/2 transition h-40">
-                            <i className="ph ph-image text-4xl text-slate-400 mb-3"></i>
-                            <span className="text-sm font-medium text-slate-600">Klik untuk Muat Naik Gambar</span>
-                            <span className="text-xs text-slate-400 mt-1">JPG, PNG, WEBP</span>
-                            <span className="text-xs text-amber-600 mt-2 font-medium">Maksimum disyorkan: {MAX_ORIGINAL_SIZE_MB} MB</span>
+                        <label className="cursor-pointer bg-black/20 border-2 border-dashed border-white/20 hover:border-indigo-400 rounded-xl p-6 flex flex-col items-center justify-center w-full sm:w-1/2 transition h-40 group">
+                            <i className="ph ph-image text-4xl text-slate-500 group-hover:text-indigo-400 mb-3 transition-colors"></i>
+                            <span className="text-sm font-medium text-slate-300 group-hover:text-white transition-colors">Muat Naik Gambar</span>
+                            <span className="text-xs text-slate-500 mt-1">JPG, PNG, WEBP</span>
                             <input type="file" accept="image/*" onChange={handleImage} className="hidden" />
                         </label>
                         {imagePreview && (
-                            <div className="relative w-full sm:w-1/2 h-40 rounded-lg border overflow-hidden shadow-sm group bg-slate-100 flex items-center justify-center">
+                            <div className="relative w-full sm:w-1/2 h-40 rounded-xl border border-white/10 overflow-hidden shadow-lg group glass-panel flex items-center justify-center">
                                 <img src={imagePreview} className="w-full h-full object-contain" alt="Preview" />
-                                <button type="button" onClick={() => setImagePreview(null)} className="absolute top-2 right-2 bg-red-600 text-white rounded p-1.5 shadow hover:bg-red-700 transition flex items-center gap-1 text-xs font-medium">
+                                <button type="button" onClick={() => setImagePreview(null)} className="absolute top-2 right-2 bg-rose-500/80 backdrop-blur-md text-white rounded p-1.5 shadow hover:bg-rose-500 transition flex items-center gap-1 text-xs font-medium border border-rose-400">
                                     <i className="ph-bold ph-trash"></i> Padam
                                 </button>
                             </div>
@@ -309,13 +450,11 @@
 
             const saveReport = async (date, dutyId, data) => {
                 const existingReport = reports[date]?.tasks?.[String(dutyId)] || reports[date]?.tasks?.[dutyId];
-
                 if (existingReport) {
                     const ownerId = existingReport.teacherId || '';
                     const ownerName = String(existingReport.teacherName || '').trim();
                     const currentId = String(currentUser.id || '').trim();
                     const currentName = String(currentUser.name || '').trim();
-
                     const isOwner = ownerId ? ownerId === currentId : ownerName === currentName;
                     if (!isOwner) {
                         showToast(`Tugasan ini telah diisi oleh ${ownerName}. Anda tidak boleh mengeditnya.`);
@@ -323,44 +462,27 @@
                     }
                 }
 
-                showToast('Laporan sedang dihantar ke Google Sheet...');
+                showToast('Laporan sedang dihantar ke pelayan...');
 
                 try {
                     const payload = {
-                        date: date,
-                        day: getDayName(date),
-                        week: data.week || '',
-                        dutyId: Number(dutyId),
-                        teacherId: currentUser.id,
-                        teacherName: currentUser.name,
-                        taskData: data,
-                        image: data.image || ''
+                        date: date, day: getDayName(date), week: data.week || '',
+                        dutyId: Number(dutyId), teacherId: currentUser.id, teacherName: currentUser.name,
+                        taskData: data, image: data.image || ''
                     };
 
                     await fetch(GOOGLE_SCRIPT_URL, {
-                        method: 'POST',
-                        mode: 'no-cors',
+                        method: 'POST', mode: 'no-cors',
                         headers: { 'Content-Type': 'text/plain;charset=utf-8' },
                         body: JSON.stringify(payload)
                     });
 
                     setReports(prev => {
-                        const existingDay = prev[date] || {
-                            date: date, day: getDayName(date), week: data.week || '',
-                            status: 'pending', tasks: {}, teachers: [], admin_comment: ''
-                        };
-
+                        const existingDay = prev[date] || { date: date, day: getDayName(date), week: data.week || '', status: 'pending', tasks: {}, teachers: [], admin_comment: '' };
                         const existingTasks = { ...existingDay.tasks };
                         const existingTeachers = [...(existingDay.teachers || [])];
-
-                        existingTasks[String(dutyId)] = {
-                            ...data, teacherName: currentUser.name, teacherId: currentUser.id
-                        };
-
-                        const teacherEntry = {
-                            name: currentUser.name, teacherId: currentUser.id, dutyId: Number(dutyId)
-                        };
-
+                        existingTasks[String(dutyId)] = { ...data, teacherName: currentUser.name, teacherId: currentUser.id };
+                        const teacherEntry = { name: currentUser.name, teacherId: currentUser.id, dutyId: Number(dutyId) };
                         const idx = existingTeachers.findIndex(t => String(t.dutyId) === String(dutyId));
                         if (idx >= 0) existingTeachers[idx] = teacherEntry;
                         else existingTeachers.push(teacherEntry);
@@ -368,10 +490,8 @@
                         return {
                             ...prev,
                             [date]: {
-                                ...existingDay,
-                                week: data.week || existingDay.week,
-                                tasks: existingTasks,
-                                teachers: existingTeachers,
+                                ...existingDay, week: data.week || existingDay.week,
+                                tasks: existingTasks, teachers: existingTeachers,
                                 status: Object.keys(existingTasks).length === 5 ? 'completed' : 'pending'
                             }
                         };
@@ -379,7 +499,6 @@
 
                     showToast('Laporan telah berjaya dihantar!');
                 } catch (error) {
-                    console.error('Gagal hantar:', error);
                     showToast('Gagal menghantar laporan. Sila cuba lagi.');
                 }
             };
@@ -387,119 +506,80 @@
             const saveAdminComment = async (date, commentText) => {
                 showToast('Menyimpan ulasan pentadbir...');
                 try {
-                    const payload = {
-                        action: "SAVE_COMMENT",
-                        date: date,
-                        comment: commentText,
-                        adminName: currentUser.name
-                    };
-
+                    const payload = { action: "SAVE_COMMENT", date: date, comment: commentText, adminName: currentUser.name };
                     await fetch(GOOGLE_SCRIPT_URL, {
-                        method: 'POST',
-                        mode: 'no-cors',
+                        method: 'POST', mode: 'no-cors',
                         headers: { 'Content-Type': 'text/plain;charset=utf-8' },
                         body: JSON.stringify(payload)
                     });
 
                     setReports(prev => ({
                         ...prev,
-                        [date]: {
-                            ...prev[date],
-                            admin_comment: commentText,
-                            status: 'reviewed'
-                        }
+                        [date]: { ...prev[date], admin_comment: commentText, status: 'reviewed' }
                     }));
-
-                    showToast('Ulasan pentadbir berjaya disimpan!');
+                    showToast('Ulasan berjaya disimpan!');
                 } catch (error) {
-                    console.error('Gagal simpan ulasan:', error);
                     showToast('Gagal menyimpan ulasan pentadbir.');
                 }
             };
 
-            if (currentView === 'login') {
-                return <LoginScreen onLogin={handleLogin} teachers={teachers} loading={loadingTeachers} />;
-            }
+            if (currentView === 'login') return <LoginScreen onLogin={handleLogin} teachers={teachers} loading={loadingTeachers} />;
 
             return (
-                <div className="min-h-screen flex flex-col relative bg-slate-100">
+                <div className="min-h-screen flex flex-col relative text-slate-200">
                     {toastMessage && (
-                        <div className="fixed top-5 left-1/2 transform -translate-x-1/2 bg-slate-900 text-white px-6 py-3 rounded-lg shadow-2xl z-50 flex items-center gap-3 animate-bounce border-l-4 border-amber-400 no-print">
-                            <i className="ph-fill ph-check-circle text-amber-400 text-xl"></i>
+                        <div className="fixed top-5 left-1/2 transform -translate-x-1/2 glass-panel border-l-4 border-indigo-400 text-white px-6 py-3 rounded-lg shadow-2xl z-50 flex items-center gap-3 animate-bounce no-print">
+                            <i className="ph-fill ph-check-circle text-indigo-400 text-xl"></i>
                             <span className="font-medium text-sm">{toastMessage}</span>
                         </div>
                     )}
 
-                    <nav className="bg-slate-900 text-white shadow-md p-4 no-print relative z-10 border-b-4 border-red-600">
-                        <div className="max-w-5xl mx-auto flex justify-between items-center">
-                            <div className="flex items-center gap-3">
-                                <img src={LOGO_SEKOLAH_URL} alt="Logo" className="w-10 h-10 object-contain bg-white rounded-full p-1 shadow-sm" />
-                                <div>
-                                    <h1 className="font-bold text-lg tracking-wide leading-tight">SMK KEM TERENDAK</h1>
-                                    <p className="text-xs text-amber-400 font-semibold">Sistem Laporan Guru Bertugas</p>
-                                </div>
+                    <nav className="glass-panel mx-4 mt-4 rounded-2xl p-4 no-print relative z-10 flex justify-between items-center shadow-lg">
+                        <div className="flex items-center gap-4">
+                            <div className="bg-white/10 rounded-full p-1.5 shadow-inner">
+                                <img src="./LOGO-SMKKT.png" alt="Logo" className="w-10 h-10 object-contain drop-shadow-md" />
                             </div>
-                            <div className="flex items-center gap-4">
-                                <span className="text-sm hidden sm:inline-block font-medium">
-                                    <i className="ph-fill ph-user-circle mr-1"></i> {currentUser.name}
-                                </span>
-                                {currentView === 'report' && (
-                                    <button onClick={() => setCurrentView(currentUser.role === 'admin' ? 'admin' : 'list')} className="text-sm bg-slate-800 hover:bg-slate-700 px-3 py-1.5 rounded transition shadow-sm font-medium border border-slate-700">
-                                        <i className="ph ph-arrow-left mr-1"></i> Kembali
-                                    </button>
-                                )}
-                                <button onClick={handleLogout} className="text-sm bg-red-600 hover:bg-red-700 px-3 py-1.5 rounded transition flex items-center shadow-sm font-medium">
-                                    <i className="ph ph-sign-out mr-1"></i> Keluar
+                            <div>
+                                <h1 className="font-bold text-lg tracking-wide leading-tight text-white drop-shadow-sm">SMK KEM TERENDAK</h1>
+                                <p className="text-xs text-indigo-300 font-semibold tracking-wider uppercase">Sistem Laporan Guru Bertugas</p>
+                            </div>
+                        </div>
+                        <div className="flex items-center gap-5">
+                            <span className="text-sm hidden sm:flex items-center text-slate-300 font-medium bg-black/20 px-3 py-1.5 rounded-full border border-white/5">
+                                <i className="ph-fill ph-user-circle mr-2 text-indigo-400 text-lg"></i> {currentUser.name}
+                            </span>
+                            {currentView === 'report' && (
+                                <button onClick={() => setCurrentView(currentUser.role === 'admin' ? 'admin' : 'list')} className="text-sm bg-white/5 hover:bg-white/10 border border-white/10 px-4 py-2 rounded-lg transition shadow-sm font-medium flex items-center gap-2">
+                                    <i className="ph ph-arrow-left text-lg"></i> Kembali
                                 </button>
-                            </div>
+                            )}
+                            <button onClick={handleLogout} className="text-sm bg-rose-500/20 hover:bg-rose-500/40 text-rose-200 border border-rose-500/30 px-4 py-2 rounded-lg transition flex items-center gap-2 font-medium backdrop-blur-sm">
+                                <i className="ph ph-sign-out text-lg"></i> Keluar
+                            </button>
                         </div>
                     </nav>
 
                     {currentUser.role === 'guru' && currentView !== 'report' && (
-                        <div className="bg-slate-800 text-white shadow-inner no-print flex justify-center gap-1 sm:gap-4 px-2 sm:px-4 pt-3">
+                        <div className="no-print flex justify-center gap-2 sm:gap-4 px-4 mt-6">
                             <button 
                                 onClick={() => setCurrentView('form')} 
-                                className={`py-2 px-4 sm:px-6 rounded-t-lg font-bold transition-colors flex items-center gap-2 ${currentView === 'form' ? 'bg-slate-100 text-red-600 shadow-md' : 'bg-slate-700 hover:bg-slate-600 text-slate-200'}`}
+                                className={`py-2.5 px-5 sm:px-8 rounded-xl font-bold transition-all flex items-center gap-2 ${currentView === 'form' ? 'glass-panel text-indigo-300 border-b border-indigo-400/50 shadow-[0_0_15px_rgba(129,140,248,0.15)]' : 'bg-white/5 text-slate-400 hover:bg-white/10 border border-transparent'}`}
                             >
-                                <i className="ph-bold ph-pencil-simple"></i> Isi Laporan
+                                <i className="ph-bold ph-pencil-simple text-lg"></i> Isi Laporan
                             </button>
                             <button 
                                 onClick={() => setCurrentView('list')} 
-                                className={`py-2 px-4 sm:px-6 rounded-t-lg font-bold transition-colors flex items-center gap-2 ${currentView === 'list' ? 'bg-slate-100 text-red-600 shadow-md' : 'bg-slate-700 hover:bg-slate-600 text-slate-200'}`}
+                                className={`py-2.5 px-5 sm:px-8 rounded-xl font-bold transition-all flex items-center gap-2 ${currentView === 'list' ? 'glass-panel text-indigo-300 border-b border-indigo-400/50 shadow-[0_0_15px_rgba(129,140,248,0.15)]' : 'bg-white/5 text-slate-400 hover:bg-white/10 border border-transparent'}`}
                             >
-                                <i className="ph-bold ph-files"></i> Papar Laporan Penuh
+                                <i className="ph-bold ph-files text-lg"></i> Papar Rekod
                             </button>
                         </div>
                     )}
 
-                    <main className="flex-grow p-4 md:p-6 w-full max-w-5xl mx-auto">
-                        {currentView === 'form' && (
-                            <DutyForm 
-                                user={currentUser} 
-                                saveReport={saveReport} 
-                                reports={reports}
-                                getDayName={getDayName}
-                                showToast={showToast}
-                            />
-                        )}
-                        {(currentView === 'admin' || currentView === 'list') && (
-                            <AdminDashboard 
-                                reports={reports} 
-                                role={currentUser.role}
-                                onViewReport={(date) => {
-                                    setSelectedDate(date);
-                                    setCurrentView('report');
-                                }}
-                            />
-                        )}
-                        {currentView === 'report' && (
-                            <CombinedReport 
-                                reportData={reports[selectedDate]} 
-                                date={selectedDate}
-                                user={currentUser}
-                                onSaveComment={(comment) => saveAdminComment(selectedDate, comment)}
-                            />
-                        )}
+                    <main className="flex-grow p-4 md:p-6 w-full max-w-5xl mx-auto mt-2">
+                        {currentView === 'form' && <DutyForm user={currentUser} saveReport={saveReport} reports={reports} getDayName={getDayName} showToast={showToast} />}
+                        {(currentView === 'admin' || currentView === 'list') && <AdminDashboard reports={reports} role={currentUser.role} onViewReport={(date) => { setSelectedDate(date); setCurrentView('report'); }} />}
+                        {currentView === 'report' && <CombinedReport reportData={reports[selectedDate]} date={selectedDate} user={currentUser} onSaveComment={(comment) => saveAdminComment(selectedDate, comment)} />}
                     </main>
                 </div>
             );
@@ -512,93 +592,75 @@
             const [taskData, setTaskData] = React.useState({});
             const [imagePreview, setImagePreview] = React.useState(null);
 
-            const handleDutyChange = (id) => {
-                setDutyId(Number(id));
-                setTaskData({});
-                setImagePreview(null);
-            };
+            const handleDutyChange = (id) => { setDutyId(Number(id)); setTaskData({}); setImagePreview(null); };
 
             const existingReport = reports[date]?.tasks?.[String(dutyId)] || reports[date]?.tasks?.[dutyId];
             const currentUserId = String(user?.id || '').trim();
             const ownerId = String(existingReport?.teacherId || '').trim();
             const ownerName = String(existingReport?.teacherName || '').trim();
-            const isOwner = existingReport
-                ? (ownerId ? ownerId === currentUserId : ownerName === String(user?.name || '').trim())
-                : true;
+            const isOwner = existingReport ? (ownerId ? ownerId === currentUserId : ownerName === String(user?.name || '').trim()) : true;
             const isLocked = !!existingReport && !isOwner;
 
             const handleSubmit = (e) => {
                 e.preventDefault();
-                if (isLocked) {
-                    showToast(`Tugasan ini telah diisi oleh ${ownerName}. Anda tidak boleh mengeditnya.`);
-                    return;
-                }
-                if (!week) {
-                    showToast("Sila masukkan nombor minggu.");
-                    return;
-                }
-                const finalData = { ...taskData, week, image: imagePreview };
-                saveReport(date, dutyId, finalData);
-
-                setDutyId("");
-                setTaskData({});
-                setImagePreview(null);
+                if (isLocked) { showToast(`Tugasan ini telah diisi oleh ${ownerName}.`); return; }
+                if (!week) { showToast("Sila masukkan nombor minggu."); return; }
+                saveReport(date, dutyId, { ...taskData, week, image: imagePreview });
+                setDutyId(""); setTaskData({}); setImagePreview(null);
             };
 
             return (
                 <div className="max-w-3xl mx-auto animation-fade-in">
-                    <div className="bg-gradient-to-r from-red-600 to-red-800 rounded-xl shadow-lg p-6 mb-6 text-white border-b-4 border-amber-400">
-                        <h2 className="text-2xl font-bold mb-1">Borang Laporan Guru Bertugas</h2>
-                        <p className="text-red-100 text-sm">Sila lengkapkan maklumat tugas harian anda.</p>
+                    <div className="glass-panel border-t-2 border-indigo-400 p-6 rounded-xl shadow-lg mb-6 text-white relative overflow-hidden">
+                        <div className="absolute top-[-50%] right-[-10%] w-64 h-64 bg-indigo-500/20 blur-[80px] rounded-full pointer-events-none"></div>
+                        <h2 className="text-2xl font-bold mb-1 tracking-wide">Borang Laporan Guru Bertugas</h2>
+                        <p className="text-indigo-200 text-sm font-medium">Sila lengkapkan maklumat tugas harian anda di bawah.</p>
                         
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-6 bg-black/20 p-4 rounded-lg border border-white/20">
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-6 bg-black/20 p-5 rounded-xl border border-white/10 shadow-inner">
                             <div>
-                                <label className="block text-xs font-semibold uppercase tracking-wider text-amber-300 mb-1">Tarikh</label>
-                                <input type="date" value={date} onChange={e => setDate(e.target.value)} className="w-full bg-white/20 border-none rounded p-2 text-white outline-none focus:ring-2 focus:ring-amber-300" required />
+                                <label className="block text-xs font-semibold uppercase tracking-wider text-indigo-300 mb-2">Tarikh</label>
+                                <input type="date" value={date} onChange={e => setDate(e.target.value)} className="w-full glass-input rounded-lg p-2.5 outline-none" required />
                             </div>
                             <div>
-                                <label className="block text-xs font-semibold uppercase tracking-wider text-amber-300 mb-1">Hari</label>
-                                <div className="w-full bg-white/10 rounded p-2 text-white font-medium">{getDayName(date) || '-'}</div>
+                                <label className="block text-xs font-semibold uppercase tracking-wider text-indigo-300 mb-2">Hari</label>
+                                <div className="w-full glass-input rounded-lg p-2.5 font-medium flex items-center h-[46px]">{getDayName(date) || '-'}</div>
                             </div>
                             <div>
-                                <label className="block text-xs font-semibold uppercase tracking-wider text-amber-300 mb-1">Minggu Ke-</label>
-                                <input type="number" min="1" max="52" value={week} onChange={e => setWeek(e.target.value)} className="w-full bg-white/20 border-none rounded p-2 text-white outline-none focus:ring-2 focus:ring-amber-300" placeholder="Cth: 9" required />
+                                <label className="block text-xs font-semibold uppercase tracking-wider text-indigo-300 mb-2">Minggu Ke-</label>
+                                <input type="number" min="1" max="52" value={week} onChange={e => setWeek(e.target.value)} className="w-full glass-input rounded-lg p-2.5 outline-none placeholder-slate-500" placeholder="Cth: 9" required />
                             </div>
                         </div>
 
-                        <div className="mt-4">
-                            <label className="block text-xs font-semibold uppercase tracking-wider text-amber-300 mb-1">Tugasan Anda</label>
+                        <div className="mt-5">
+                            <label className="block text-xs font-semibold uppercase tracking-wider text-indigo-300 mb-2">Tugasan Anda</label>
                             <select 
-                                className="w-full border-none rounded p-3 text-slate-800 bg-white outline-none focus:ring-2 focus:ring-amber-300 font-medium"
+                                className="w-full glass-input rounded-lg p-3 outline-none text-sm font-medium appearance-none"
                                 value={dutyId}
                                 onChange={(e) => handleDutyChange(e.target.value)}
                             >
-                                <option value="" disabled>-- Pilih Tugasan Anda --</option>
-                                {DUTIES.map(d => (
-                                    <option key={d.id} value={d.id}>{d.id}. {d.title}</option>
-                                ))}
+                                <option value="" disabled className="text-slate-800">-- Pilih Tugasan Anda --</option>
+                                {DUTIES.map(d => <option key={d.id} value={d.id} className="text-slate-800">{d.id}. {d.title}</option>)}
                             </select>
                         </div>
                     </div>
 
                     {dutyId && existingReport && !isLocked && (
-                        <div className="bg-amber-50 border border-amber-300 text-amber-900 rounded-xl p-4 mb-6 flex items-start gap-3 shadow-sm">
-                            <i className="ph-fill ph-check-circle text-2xl text-amber-600"></i>
+                        <div className="glass-panel bg-emerald-500/10 border border-emerald-500/30 text-emerald-200 rounded-xl p-4 mb-6 flex items-start gap-4 shadow-md">
+                            <i className="ph-fill ph-check-circle text-3xl text-emerald-400 mt-1"></i>
                             <div>
-                                <h4 className="font-bold">Laporan Telah Dihantar</h4>
-                                <p className="text-sm mt-1">Anda telah menghantar laporan untuk tugasan ini pada tarikh tersebut. Hantar semula jika ingin mengemas kini (override).</p>
+                                <h4 className="font-bold text-lg">Laporan Telah Dihantar</h4>
+                                <p className="text-sm mt-1 opacity-90">Anda telah menghantar laporan untuk tugasan ini pada tarikh tersebut. Hantar semula jika ingin mengemas kini data.</p>
                             </div>
                         </div>
                     )}
 
                     {dutyId && isLocked && (
-                        <div className="bg-red-50 border border-red-200 text-red-800 rounded-xl p-5 mb-6 flex items-start gap-4 shadow-sm">
-                            <i className="ph-fill ph-lock-key text-3xl text-red-500 mt-1"></i>
+                        <div className="glass-panel bg-rose-500/10 border border-rose-500/30 text-rose-200 rounded-xl p-5 mb-6 flex items-start gap-4 shadow-md">
+                            <i className="ph-fill ph-lock-key text-3xl text-rose-400 mt-1"></i>
                             <div>
                                 <h4 className="font-bold text-lg">Tugasan Telah Diisi</h4>
-                                <p className="text-sm mt-1 leading-relaxed">
-                                    Maaf, tugasan ini telah dilengkapkan oleh <strong className="text-red-900 border-b border-red-300">{existingReport.teacherName}</strong> pada tarikh ini. 
-                                    Sila pilih tugasan atau tarikh lain untuk mengelakkan pertindihan data.
+                                <p className="text-sm mt-1 leading-relaxed opacity-90">
+                                    Maaf, tugasan ini telah dilengkapkan oleh <strong className="text-white border-b border-rose-300/50">{existingReport.teacherName}</strong>. Sila pilih tugasan atau tarikh lain.
                                 </p>
                             </div>
                         </div>
@@ -608,15 +670,8 @@
                         <form onSubmit={handleSubmit} className="space-y-6">
                             {dutyId === 1 && (
                                 <FormSection title="Laporan Perhimpunan Pagi" icon="ph-megaphone">
-                                    <label className="block text-sm font-semibold text-slate-700 mb-2">Catatan / Pengumuman / Isu (Senaraikan)</label>
-                                    <textarea 
-                                        rows="6"
-                                        className="w-full border border-slate-300 rounded-lg p-3 bg-slate-50 focus:bg-white focus:ring-2 focus:ring-red-600 outline-none"
-                                        placeholder="1) Pn. Guru Besar memaklumkan..."
-                                        value={taskData.notes || ''}
-                                        onChange={e => setTaskData({...taskData, notes: e.target.value})}
-                                        required
-                                    ></textarea>
+                                    <label className="block text-sm font-semibold text-slate-300 mb-3">Catatan / Pengumuman / Isu (Senaraikan)</label>
+                                    <textarea rows="6" className="w-full glass-input rounded-xl p-4 outline-none resize-y placeholder-slate-500" placeholder="1) Pn. Pengetua memaklumkan..." value={taskData.notes || ''} onChange={e => setTaskData({...taskData, notes: e.target.value})} required></textarea>
                                     <ImageUpload imagePreview={imagePreview} setImagePreview={setImagePreview} label="Gambar Semasa Perhimpunan" />
                                 </FormSection>
                             )}
@@ -624,81 +679,80 @@
                             {dutyId === 2 && (
                                 <FormSection title="Kawalan Pintu Masuk Pagi" icon="ph-door">
                                     <RadioGroup label="Status Kawalan" options={['Terkawal', 'Sederhana', 'Tidak Terkawal']} value={taskData.status || ''} onChange={v => setTaskData({...taskData, status: v})} />
-                                    <label className="block text-sm font-semibold text-slate-700 mb-2 mt-4">Laporan / Isu</label>
-                                    <textarea rows="4" className="w-full border border-slate-300 rounded-lg p-3 bg-slate-50 focus:bg-white focus:ring-2 focus:ring-red-600 outline-none" placeholder="Masih terdapat pelajar tidak memakai t-shirt badan beruniform..." value={taskData.notes || ''} onChange={e => setTaskData({...taskData, notes: e.target.value})}></textarea>
+                                    <label className="block text-sm font-semibold text-slate-300 mb-3 mt-6">Laporan / Isu</label>
+                                    <textarea rows="4" className="w-full glass-input rounded-xl p-4 outline-none placeholder-slate-500" placeholder="Pelajar tiba lewat kerana hujan..." value={taskData.notes || ''} onChange={e => setTaskData({...taskData, notes: e.target.value})}></textarea>
                                     <ImageUpload imagePreview={imagePreview} setImagePreview={setImagePreview} label="Gambar Pintu Masuk" />
                                 </FormSection>
                             )}
 
                             {dutyId === 3 && (
                                 <FormSection title="Kawalan Waktu Rehat & Kantin" icon="ph-coffee">
-                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                         <RadioGroup label="Kebersihan Kantin" options={['Bersih', 'Sederhana', 'Kotor']} value={taskData.canteen_clean || ''} onChange={v => setTaskData({...taskData, canteen_clean: v})} />
                                         <RadioGroup label="Kebersihan Sekitar Koperasi" options={['Bersih', 'Sederhana', 'Kotor']} value={taskData.coop_clean || ''} onChange={v => setTaskData({...taskData, coop_clean: v})} />
                                     </div>
-                                    <div className="mt-4">
+                                    <div className="mt-6">
                                         <RadioGroup label="Disiplin Murid (Kantin/Koperasi)" options={['Berdisiplin', 'Sederhana', 'Kurang Berdisiplin']} value={taskData.discipline || ''} onChange={v => setTaskData({...taskData, discipline: v})} />
                                     </div>
-                                    <label className="block text-sm font-semibold text-slate-700 mb-2 mt-4">Catatan Tambahan</label>
-                                    <textarea rows="3" className="w-full border border-slate-300 rounded-lg p-3 bg-slate-50 focus:bg-white focus:ring-2 focus:ring-red-600 outline-none" placeholder="Sempena bulan Ramadhan..." value={taskData.notes || ''} onChange={e => setTaskData({...taskData, notes: e.target.value})}></textarea>
+                                    <label className="block text-sm font-semibold text-slate-300 mb-3 mt-6">Catatan Tambahan</label>
+                                    <textarea rows="3" className="w-full glass-input rounded-xl p-4 outline-none placeholder-slate-500" placeholder="Sempena bulan Ramadhan..." value={taskData.notes || ''} onChange={e => setTaskData({...taskData, notes: e.target.value})}></textarea>
                                     <ImageUpload imagePreview={imagePreview} setImagePreview={setImagePreview} label="Gambar Keadaan Rehat/Kantin" />
                                 </FormSection>
                             )}
 
                             {dutyId === 4 && (
                                 <FormSection title="Rondaan Blok, Surau & Tandas" icon="ph-buildings">
-                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4">
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-5">
                                         <RadioGroup label="Kebersihan Blok Kelas" options={['Bersih', 'Sederhana', 'Kotor']} value={taskData.block_clean || ''} onChange={v => setTaskData({...taskData, block_clean: v})} />
                                         <RadioGroup label="Kebersihan Surau Lelaki" options={['Bersih', 'Sederhana', 'Kotor']} value={taskData.surau_l || ''} onChange={v => setTaskData({...taskData, surau_l: v})} />
                                         <RadioGroup label="Kebersihan Surau Perempuan" options={['Bersih', 'Sederhana', 'Kotor']} value={taskData.surau_p || ''} onChange={v => setTaskData({...taskData, surau_p: v})} />
                                         <RadioGroup label="Kebersihan Tandas Lelaki" options={['Bersih', 'Sederhana', 'Kotor']} value={taskData.tandas_l || ''} onChange={v => setTaskData({...taskData, tandas_l: v})} />
                                         <RadioGroup label="Kebersihan Tandas Perempuan" options={['Bersih', 'Sederhana', 'Kotor']} value={taskData.tandas_p || ''} onChange={v => setTaskData({...taskData, tandas_p: v})} />
                                     </div>
-                                    <label className="block text-sm font-semibold text-slate-700 mb-2 mt-4">Catatan/Isu Kerosakan</label>
-                                    <textarea rows="3" className="w-full border border-slate-300 rounded-lg p-3 bg-slate-50 focus:bg-white focus:ring-2 focus:ring-red-600 outline-none" placeholder="Terdapat sampah di dalam longkang..." value={taskData.notes || ''} onChange={e => setTaskData({...taskData, notes: e.target.value})}></textarea>
+                                    <label className="block text-sm font-semibold text-slate-300 mb-3 mt-6">Catatan / Isu Kerosakan</label>
+                                    <textarea rows="3" className="w-full glass-input rounded-xl p-4 outline-none placeholder-slate-500" placeholder="Terdapat paip bocor di tandas murid..." value={taskData.notes || ''} onChange={e => setTaskData({...taskData, notes: e.target.value})}></textarea>
                                     <ImageUpload imagePreview={imagePreview} setImagePreview={setImagePreview} label="Gambar Kawasan (Pilihan)" />
                                 </FormSection>
                             )}
 
                             {dutyId === 5 && (
-                                <FormSection title="Laporan Kehadiran, Sakit & Aktiviti" icon="ph-users">
-                                    <div className="bg-slate-50 p-4 rounded border border-slate-200 mb-4">
-                                        <h4 className="font-bold text-slate-700 mb-3 border-b pb-2">Kehadiran Staf</h4>
+                                <FormSection title="Laporan Kehadiran & Aktiviti" icon="ph-users">
+                                    <div className="bg-black/20 p-5 rounded-xl border border-white/10 mb-6">
+                                        <h4 className="font-bold text-white mb-4 flex items-center gap-2"><i className="ph-fill ph-chalkboard-teacher text-indigo-300"></i> Kehadiran Staf</h4>
                                         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                                            <div><label className="text-xs text-slate-500 block">Guru Hadir</label><input type="number" className="w-full border rounded p-2" value={taskData.guru_hadir || ''} onChange={e => setTaskData({...taskData, guru_hadir: e.target.value})} /></div>
-                                            <div><label className="text-xs text-slate-500 block">Jumlah Guru</label><input type="number" className="w-full border rounded p-2" value={taskData.guru_total || ''} onChange={e => setTaskData({...taskData, guru_total: e.target.value})} /></div>
-                                            <div><label className="text-xs text-slate-500 block">AKP Hadir</label><input type="number" className="w-full border rounded p-2" value={taskData.akp_hadir || ''} onChange={e => setTaskData({...taskData, akp_hadir: e.target.value})} /></div>
-                                            <div><label className="text-xs text-slate-500 block">Jumlah AKP</label><input type="number" className="w-full border rounded p-2" value={taskData.akp_total || ''} onChange={e => setTaskData({...taskData, akp_total: e.target.value})} /></div>
+                                            <div><label className="text-xs text-slate-400 block mb-1">Guru Hadir</label><input type="number" className="w-full glass-input rounded p-2" value={taskData.guru_hadir || ''} onChange={e => setTaskData({...taskData, guru_hadir: e.target.value})} /></div>
+                                            <div><label className="text-xs text-slate-400 block mb-1">Jumlah Guru</label><input type="number" className="w-full glass-input rounded p-2" value={taskData.guru_total || ''} onChange={e => setTaskData({...taskData, guru_total: e.target.value})} /></div>
+                                            <div><label className="text-xs text-slate-400 block mb-1">AKP Hadir</label><input type="number" className="w-full glass-input rounded p-2" value={taskData.akp_hadir || ''} onChange={e => setTaskData({...taskData, akp_hadir: e.target.value})} /></div>
+                                            <div><label className="text-xs text-slate-400 block mb-1">Jumlah AKP</label><input type="number" className="w-full glass-input rounded p-2" value={taskData.akp_total || ''} onChange={e => setTaskData({...taskData, akp_total: e.target.value})} /></div>
                                         </div>
-                                        <div className="mt-3">
-                                            <label className="text-xs font-semibold text-slate-700 block mb-1">Senarai Staf Tidak Hadir & Sebab</label>
-                                            <textarea rows="3" className="w-full border rounded p-2 text-sm" placeholder="1. Zuriana binti Abdul - Bengkel..." value={taskData.guru_tak_hadir || ''} onChange={e => setTaskData({...taskData, guru_tak_hadir: e.target.value})}></textarea>
+                                        <div className="mt-4">
+                                            <label className="text-xs font-semibold text-slate-300 block mb-2">Senarai Staf Tidak Hadir & Sebab</label>
+                                            <textarea rows="3" className="w-full glass-input rounded-lg p-3 text-sm placeholder-slate-500" placeholder="1. Zuriana binti Abdul - Cuti Rehat Khas..." value={taskData.guru_tak_hadir || ''} onChange={e => setTaskData({...taskData, guru_tak_hadir: e.target.value})}></textarea>
                                         </div>
                                     </div>
 
-                                    <div className="bg-red-50 p-4 rounded border border-red-100">
-                                        <h4 className="font-bold text-red-900 mb-3 border-b border-red-200 pb-2">Kehadiran & Aktiviti Murid</h4>
-                                        <div className="grid grid-cols-2 gap-4 mb-3">
-                                            <div><label className="text-xs text-slate-500 block">Murid Hadir</label><input type="number" className="w-full border rounded p-2" value={taskData.murid_hadir || ''} onChange={e => setTaskData({...taskData, murid_hadir: e.target.value})} /></div>
-                                            <div><label className="text-xs text-slate-500 block">Jumlah Murid</label><input type="number" className="w-full border rounded p-2" value={taskData.murid_total || ''} onChange={e => setTaskData({...taskData, murid_total: e.target.value})} /></div>
+                                    <div className="bg-black/20 p-5 rounded-xl border border-white/10">
+                                        <h4 className="font-bold text-white mb-4 flex items-center gap-2"><i className="ph-fill ph-student text-teal-300"></i> Kehadiran & Aktiviti Murid</h4>
+                                        <div className="grid grid-cols-2 gap-4 mb-4">
+                                            <div><label className="text-xs text-slate-400 block mb-1">Murid Hadir</label><input type="number" className="w-full glass-input rounded p-2" value={taskData.murid_hadir || ''} onChange={e => setTaskData({...taskData, murid_hadir: e.target.value})} /></div>
+                                            <div><label className="text-xs text-slate-400 block mb-1">Jumlah Murid</label><input type="number" className="w-full glass-input rounded p-2" value={taskData.murid_total || ''} onChange={e => setTaskData({...taskData, murid_total: e.target.value})} /></div>
                                         </div>
-                                        <div className="space-y-3">
+                                        <div className="space-y-5">
                                             <div>
-                                                <label className="text-xs font-semibold text-slate-700 block mb-1">Nama Murid Sakit / Pulang</label>
-                                                <textarea rows="2" className="w-full border rounded p-2 text-sm" placeholder="Mirhana (4 Perniagaan) - Pitam..." value={taskData.murid_sakit || ''} onChange={e => setTaskData({...taskData, murid_sakit: e.target.value})}></textarea>
+                                                <label className="text-xs font-semibold text-slate-300 block mb-2">Nama Murid Sakit / Pulang</label>
+                                                <textarea rows="2" className="w-full glass-input rounded-lg p-3 text-sm placeholder-slate-500" placeholder="Ahmad (4 Sains) - Demam..." value={taskData.murid_sakit || ''} onChange={e => setTaskData({...taskData, murid_sakit: e.target.value})}></textarea>
                                             </div>
-                                            <div>
-                                                <label className="text-xs font-semibold text-slate-700 block mb-1">Aktiviti Selepas Persekolahan</label>
-                                                <input type="text" className="w-full border rounded p-2 text-sm" placeholder="Perjumpaan Kokurikulum..." value={taskData.aktiviti || ''} onChange={e => setTaskData({...taskData, aktiviti: e.target.value})} />
+                                            <div className="pt-2 border-t border-white/10">
+                                                <CheckboxGroup label="Aktiviti Selepas Persekolahan" options={AKTIVITI_OPTIONS} value={taskData.aktiviti || ''} onChange={(val) => setTaskData({...taskData, aktiviti: val})} />
                                             </div>
                                         </div>
                                     </div>
-                                    <p className="text-xs text-slate-500 italic mt-2">* Tugasan ini tidak memerlukan muat naik gambar.</p>
+                                    <p className="text-xs text-slate-400 italic mt-3">* Tugasan ini tidak memerlukan muat naik gambar.</p>
                                 </FormSection>
                             )}
 
-                            <div className="flex justify-end pt-4">
-                                <button type="submit" className="bg-red-600 hover:bg-red-700 text-white font-bold py-3 px-8 rounded-lg shadow-md transition text-lg flex items-center gap-2">
+                            <div className="flex justify-end pt-6 pb-10">
+                                <button type="submit" className="bg-indigo-500 hover:bg-indigo-400 text-white font-bold py-3.5 px-8 rounded-xl shadow-[0_0_20px_rgba(99,102,241,0.4)] border border-indigo-400/50 transition-all text-lg flex items-center gap-3 backdrop-blur-md">
                                     <i className="ph-bold ph-paper-plane-right"></i> Hantar Laporan Tugasan
                                 </button>
                             </div>
@@ -714,57 +768,57 @@
             return (
                 <div className="max-w-4xl mx-auto animation-fade-in">
                     <div className="mb-8">
-                        <h2 className="text-3xl font-bold text-slate-800">
+                        <h2 className="text-3xl font-bold text-white tracking-wide">
                             {role === 'admin' ? 'Papan Pemuka Pentadbir' : 'Senarai Laporan Harian'}
                         </h2>
-                        <p className="text-slate-500 mt-1">
-                            {role === 'admin' ? 'Semak dan berikan ulasan untuk laporan harian guru bertugas.' : 'Pilih tarikh untuk menyemak status pengisian dan laporan penuh.'}
+                        <p className="text-slate-400 mt-2">
+                            {role === 'admin' ? 'Semak dan berikan ulasan untuk laporan harian guru bertugas.' : 'Pilih tarikh untuk menyemak status pengisian dan paparan laporan penuh.'}
                         </p>
                     </div>
 
-                    <div className="hidden md:block bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+                    <div className="hidden md:block glass-panel rounded-xl overflow-hidden border border-white/10 shadow-xl">
                         <div className="mobile-table-scroll w-full">
                             <table className="w-full min-w-[720px] text-left border-collapse">
                                 <thead>
-                                    <tr className="bg-slate-50 text-slate-600 border-b">
-                                        <th className="p-4 font-semibold">Tarikh & Hari</th>
-                                        <th className="p-4 font-semibold text-center">Minggu</th>
-                                        <th className="p-4 font-semibold text-center">Tugasan Siap</th>
-                                        <th className="p-4 font-semibold text-center">Status</th>
-                                        <th className="p-4 font-semibold text-center">Tindakan</th>
+                                    <tr className="bg-white/5 text-slate-300 border-b border-white/10">
+                                        <th className="p-5 font-semibold">Tarikh & Hari</th>
+                                        <th className="p-5 font-semibold text-center">Minggu</th>
+                                        <th className="p-5 font-semibold text-center">Tugasan Siap</th>
+                                        <th className="p-5 font-semibold text-center">Status</th>
+                                        <th className="p-5 font-semibold text-center">Tindakan</th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     {reportList.length === 0 ? (
-                                        <tr><td colSpan="5" className="p-8 text-center text-slate-500">Tiada laporan direkodkan lagi.</td></tr>
+                                        <tr><td colSpan="5" className="p-10 text-center text-slate-400 italic">Tiada laporan direkodkan lagi.</td></tr>
                                     ) : (
                                         reportList.map(r => {
                                             const tasksDone = Object.keys(r.tasks || {}).length;
                                             const isComplete = tasksDone === 5;
                                             return (
-                                                <tr key={r.date} className="border-b hover:bg-slate-50 transition">
-                                                    <td className="p-4">
-                                                        <div className="font-bold text-slate-800">{r.date}</div>
-                                                        <div className="text-xs text-slate-500 uppercase">{r.day}</div>
+                                                <tr key={r.date} className="border-b border-white/5 hover:bg-white/5 transition-colors">
+                                                    <td className="p-5">
+                                                        <div className="font-bold text-white text-lg">{r.date}</div>
+                                                        <div className="text-xs text-indigo-300 uppercase tracking-widest mt-1">{r.day}</div>
                                                     </td>
-                                                    <td className="p-4 text-center font-medium">{r.week}</td>
-                                                    <td className="p-4 text-center">
-                                                        <span className={`px-2.5 py-1 rounded-full text-xs font-bold ${isComplete ? 'bg-red-100 text-red-700' : 'bg-amber-100 text-amber-800'}`}>
+                                                    <td className="p-5 text-center font-medium text-slate-300">{r.week || '-'}</td>
+                                                    <td className="p-5 text-center">
+                                                        <span className={`px-3 py-1.5 rounded-lg text-xs font-bold border ${isComplete ? 'bg-indigo-500/20 text-indigo-300 border-indigo-500/30 shadow-[0_0_10px_rgba(129,140,248,0.2)]' : 'bg-amber-500/20 text-amber-300 border-amber-500/30'}`}>
                                                             {tasksDone} / 5
                                                         </span>
                                                     </td>
-                                                    <td className="p-4 text-center">
+                                                    <td className="p-5 text-center">
                                                         {r.status === 'reviewed' ? (
-                                                            <span className="text-green-600 font-semibold inline-flex items-center justify-center gap-1 text-sm"><i className="ph-fill ph-check-circle"></i> Disemak</span>
+                                                            <span className="text-emerald-400 font-semibold inline-flex items-center gap-1.5 text-sm bg-emerald-500/10 px-3 py-1 rounded-full border border-emerald-500/20"><i className="ph-fill ph-check-circle"></i> Disemak</span>
                                                         ) : isComplete ? (
-                                                            <span className="text-amber-600 font-semibold text-sm">Menunggu Semakan</span>
+                                                            <span className="text-indigo-300 font-medium text-sm">Menunggu Semakan</span>
                                                         ) : (
-                                                            <span className="text-slate-400 text-sm">Belum Lengkap</span>
+                                                            <span className="text-slate-500 text-sm italic">Belum Lengkap</span>
                                                         )}
                                                     </td>
-                                                    <td className="p-4 text-center">
-                                                        <button onClick={() => onViewReport(r.date)} className="bg-slate-900 hover:bg-slate-800 text-white px-4 py-2 rounded-lg text-sm font-bold transition">
-                                                            Lihat Laporan
+                                                    <td className="p-5 text-center">
+                                                        <button onClick={() => onViewReport(r.date)} className="bg-white/10 hover:bg-indigo-500 hover:border-indigo-400 border border-white/10 text-white px-5 py-2.5 rounded-lg text-sm font-bold transition-all shadow-sm">
+                                                            Lihat
                                                         </button>
                                                     </td>
                                                 </tr>
@@ -776,38 +830,38 @@
                         </div>
                     </div>
 
-                    <div className="md:hidden space-y-3">
+                    <div className="md:hidden space-y-4 pb-10">
                         {reportList.length === 0 ? (
-                            <div className="mobile-report-card text-center text-slate-500">Tiada laporan direkodkan lagi.</div>
+                            <div className="glass-panel p-6 text-center text-slate-400 rounded-xl">Tiada laporan direkodkan lagi.</div>
                         ) : (
                             reportList.map(r => {
                                 const tasksDone = Object.keys(r.tasks || {}).length;
                                 const isComplete = tasksDone === 5;
                                 return (
-                                    <div key={r.date} className="mobile-report-card shadow-sm">
-                                        <div className="flex items-start justify-between gap-3">
+                                    <div key={r.date} className="mobile-report-card">
+                                        <div className="flex items-start justify-between gap-3 border-b border-white/10 pb-4">
                                             <div>
-                                                <div className="font-bold text-slate-800 text-lg">{r.date}</div>
-                                                <div className="text-xs text-slate-500 uppercase mt-1">{r.day}</div>
+                                                <div className="font-bold text-white text-xl">{r.date}</div>
+                                                <div className="text-xs text-indigo-300 uppercase tracking-widest mt-1">{r.day}</div>
                                             </div>
-                                            <span className={`px-2.5 py-1 rounded-full text-xs font-bold whitespace-nowrap ${isComplete ? 'bg-red-100 text-red-700' : 'bg-amber-100 text-amber-800'}`}>
+                                            <span className={`px-3 py-1.5 rounded-lg text-xs font-bold whitespace-nowrap border ${isComplete ? 'bg-indigo-500/20 text-indigo-300 border-indigo-500/30 shadow-[0_0_10px_rgba(129,140,248,0.2)]' : 'bg-amber-500/20 text-amber-300 border-amber-500/30'}`}>
                                                 {tasksDone} / 5 tugas
                                             </span>
                                         </div>
                                         <div className="grid grid-cols-2 gap-3 mt-4">
-                                            <div className="rounded-lg bg-slate-50 p-3">
-                                                <div className="text-xs text-slate-500 uppercase">Minggu</div>
-                                                <div className="font-bold text-slate-800 mt-1">{r.week || '-'}</div>
+                                            <div className="rounded-xl bg-black/20 border border-white/5 p-3">
+                                                <div className="text-[10px] text-slate-400 uppercase tracking-wider">Minggu</div>
+                                                <div className="font-bold text-slate-200 mt-1">{r.week || '-'}</div>
                                             </div>
-                                            <div className="rounded-lg bg-slate-50 p-3">
-                                                <div className="text-xs text-slate-500 uppercase">Status</div>
-                                                <div className={`font-semibold mt-1 ${r.status === 'reviewed' ? 'text-green-600' : isComplete ? 'text-amber-600' : 'text-slate-500'}`}>
-                                                    {r.status === 'reviewed' ? 'Disemak' : isComplete ? 'Menunggu Semakan' : 'Belum Lengkap'}
+                                            <div className="rounded-xl bg-black/20 border border-white/5 p-3">
+                                                <div className="text-[10px] text-slate-400 uppercase tracking-wider">Status</div>
+                                                <div className={`font-semibold mt-1 text-sm ${r.status === 'reviewed' ? 'text-emerald-400' : isComplete ? 'text-indigo-300' : 'text-slate-500'}`}>
+                                                    {r.status === 'reviewed' ? 'Disemak' : isComplete ? 'Selesai' : 'Tak Lengkap'}
                                                 </div>
                                             </div>
                                         </div>
-                                        <button onClick={() => onViewReport(r.date)} className="w-full mt-4 bg-slate-900 hover:bg-slate-800 text-white px-4 py-3 rounded-lg text-sm font-bold transition flex items-center justify-center gap-2">
-                                            <i className="ph-bold ph-file-text"></i> Lihat Laporan
+                                        <button onClick={() => onViewReport(r.date)} className="w-full mt-4 bg-indigo-500/80 hover:bg-indigo-500 border border-indigo-400/50 text-white px-4 py-3 rounded-xl text-sm font-bold transition flex items-center justify-center gap-2 shadow-[0_4px_15px_rgba(99,102,241,0.2)]">
+                                            <i className="ph-bold ph-file-text text-lg"></i> Papar Laporan Penuh
                                         </button>
                                     </div>
                                 );
@@ -819,22 +873,13 @@
         };
 
         const getDriveFileId = (url) => {
-            const value = String(url || '').trim();
-            if (!value) return '';
-            const match = value.match(/[?&]id=([^&]+)/) || value.match(/\/d\/([^/]+)/);
+            const match = String(url || '').match(/[?&]id=([^&]+)/) || String(url || '').match(/\/d\/([^/]+)/);
             return match ? match[1] : '';
         };
 
         const getImageCandidates = (url) => {
-            const original = String(url || '').trim();
-            if (!original) return [];
-            const fileId = getDriveFileId(original);
-            if (!fileId) return [original];
-            return [
-                `https://drive.google.com/thumbnail?id=${fileId}&sz=w1200`,
-                `https://drive.google.com/uc?export=view&id=${fileId}`,
-                original
-            ];
+            const fileId = getDriveFileId(url);
+            return fileId ? [`https://drive.google.com/thumbnail?id=${fileId}&sz=w1200`, `https://drive.google.com/uc?export=view&id=${fileId}`, url] : [url];
         };
 
         const DriveImage = ({ url, alt, className }) => {
@@ -844,133 +889,108 @@
             React.useEffect(() => {
                 let cancelled = false;
                 const fileId = getDriveFileId(url);
+                if (!fileId) { setSrc(url || ''); setStatus(url ? 'ready' : 'error'); return; }
 
-                if (!fileId) {
-                    setSrc(url || '');
-                    setStatus(url ? 'ready' : 'error');
-                    return () => { cancelled = true; };
-                }
-
-                const proxyUrl = `${GOOGLE_SCRIPT_URL}?imageId=${encodeURIComponent(fileId)}`;
-
-                fetch(proxyUrl)
+                fetch(`${GOOGLE_SCRIPT_URL}?imageId=${encodeURIComponent(fileId)}`)
                     .then(r => r.json())
                     .then(data => {
                         if (cancelled) return;
-                        if (data.status === 'success' && data.dataUrl) {
-                            setSrc(data.dataUrl);
-                            setStatus('ready');
-                        } else {
-                            const fallback = getImageCandidates(url)[0] || url;
-                            setSrc(fallback);
-                            setStatus('fallback');
-                        }
+                        if (data.status === 'success' && data.dataUrl) { setSrc(data.dataUrl); setStatus('ready'); }
+                        else { setSrc(getImageCandidates(url)[0] || url); setStatus('fallback'); }
                     })
                     .catch(() => {
                         if (cancelled) return;
-                        const fallback = getImageCandidates(url)[0] || url;
-                        setSrc(fallback);
-                        setStatus('fallback');
+                        setSrc(getImageCandidates(url)[0] || url); setStatus('fallback');
                     });
-
                 return () => { cancelled = true; };
             }, [url]);
 
-            if (status === 'loading') {
-                return <div className="w-full h-48 rounded bg-slate-100 flex items-center justify-center text-xs text-slate-400">Memuat gambar...</div>;
-            }
-
-            if (!src) {
-                return <div className="w-full h-48 rounded bg-slate-100 flex items-center justify-center text-xs text-red-500">Gambar tidak dapat dipaparkan.</div>;
-            }
+            if (status === 'loading') return <div className="w-full h-48 rounded bg-slate-100 flex items-center justify-center text-xs text-slate-400 animate-pulse">Memuat gambar...</div>;
+            if (!src) return <div className="w-full h-48 rounded bg-slate-100 flex items-center justify-center text-xs text-red-400 border border-red-200">Gagal paparan.</div>;
 
             return (
-                <img
-                    src={src}
-                    className={className}
-                    alt={alt}
-                    loading="eager"
-                    referrerPolicy="no-referrer"
-                    onError={(e) => {
-                        const fallback = getImageCandidates(url);
-                        const current = e.currentTarget.dataset.fallbackIndex ? Number(e.currentTarget.dataset.fallbackIndex) : 0;
-                        const next = current + 1;
-                        if (next < fallback.length) {
-                            e.currentTarget.dataset.fallbackIndex = String(next);
-                            e.currentTarget.src = fallback[next];
-                            return;
-                        }
+                <img src={src} className={className} alt={alt} loading="eager" referrerPolicy="no-referrer" onError={(e) => {
+                    const fallback = getImageCandidates(url);
+                    const current = Number(e.currentTarget.dataset.fallbackIndex || 0);
+                    if (current + 1 < fallback.length) {
+                        e.currentTarget.dataset.fallbackIndex = String(current + 1);
+                        e.currentTarget.src = fallback[current + 1];
+                    } else {
                         e.currentTarget.style.display = 'none';
-                        const box = e.currentTarget.parentElement;
-                        if (box && !box.querySelector('.image-error-msg')) {
-                            const msg = document.createElement('p');
-                            msg.className = 'image-error-msg text-xs text-red-500 mt-2';
-                            msg.textContent = 'Gambar tidak dapat dipaparkan di sini.';
-                            box.appendChild(msg);
-                        }
-                    }}
-                />
+                        e.currentTarget.parentElement.innerHTML += '<p class="text-xs text-red-500 mt-2">Imej rosak.</p>';
+                    }
+                }} />
             );
         };
 
         const CombinedReport = ({ reportData, date, onSaveComment, user }) => {
             const [comment, setComment] = React.useState(reportData?.admin_comment || '');
             
-            if (!reportData) return <div className="text-center p-10">Laporan tidak ditemui.</div>;
+            if (!reportData) return <div className="text-center p-10 text-white font-medium">Laporan tidak ditemui.</div>;
 
-            const renderText = (text) => {
-                if (!text) return <span className="text-slate-400 italic">Tiada catatan</span>;
-                return String(text).split('\n').map((line, i) => <React.Fragment key={i}>{line}<br/></React.Fragment>);
+            const renderText = (text) => text ? String(text).split('\n').map((line, i) => <React.Fragment key={i}>{line}<br/></React.Fragment>) : <span className="text-slate-400 italic">Tiada catatan</span>;
+
+            const formatAktiviti = (aktivitiValue) => {
+                if (!aktivitiValue) return <span className="text-slate-400 italic">Tiada aktiviti didaftarkan</span>;
+                try {
+                    const parsed = JSON.parse(aktivitiValue);
+                    if (!Array.isArray(parsed) || parsed.length === 0) return <span className="text-slate-400 italic">-</span>;
+                    return (
+                        <ul className="list-disc pl-5 space-y-1.5 mt-1">
+                            {parsed.map((item, index) => {
+                                if (item.type === 'standard') return <li key={index} className="text-slate-800">{item.text}</li>;
+                                if (item.type === 'other' && item.text) return <li key={index} className="text-slate-800">Lain-lain: <br/><span className="whitespace-pre-line text-sm text-slate-600 border-l-2 border-slate-300 pl-3 block mt-1 py-1">{item.text}</span></li>;
+                                return null;
+                            })}
+                        </ul>
+                    );
+                } catch (e) { return aktivitiValue; }
             };
 
-            const t5 = reportData.tasks[5] || {};
-            const t1 = reportData.tasks[1] || {};
-            const t2 = reportData.tasks[2] || {};
-            const t3 = reportData.tasks[3] || {};
-            const t4 = reportData.tasks[4] || {};
+            const t = reportData.tasks;
 
             return (
-                <div className="max-w-4xl mx-auto pb-20 relative">
+                <div className="max-w-4xl mx-auto pb-20 relative text-slate-800">
                     <div className="flex justify-end mb-6 no-print sticky top-4 z-10">
-                        <button onClick={window.handlePrint} title="Tekan Ctrl+P (Windows) atau Cmd+P (Mac) jika butang ini tidak berfungsi" className="bg-slate-900 text-white px-6 py-2.5 rounded shadow-lg flex items-center gap-2 hover:bg-slate-800 font-bold transition transform hover:-translate-y-1">
-                            <i className="ph-bold ph-printer text-xl"></i> Cetak Laporan
+                        <button onClick={window.handlePrint} className="bg-indigo-500 hover:bg-indigo-400 text-white px-6 py-2.5 rounded-xl shadow-[0_4px_20px_rgba(99,102,241,0.4)] flex items-center gap-2 font-bold transition transform hover:-translate-y-1 border border-indigo-400/50 backdrop-blur-md">
+                            <i className="ph-bold ph-printer text-xl"></i> Cetak Dokumen
                         </button>
                     </div>
 
-                    <div className="bg-white p-8 md:p-12 rounded-xl shadow-md border border-slate-200 text-sm md:text-base text-slate-800 leading-relaxed print:shadow-none print:border-none print:p-0">
-                        <div className="text-center mb-8 border-b-2 border-slate-800 pb-4">
-                            <img src="./LOGO-SMKKT.png" alt="Logo Sekolah" className="w-20 h-20 mx-auto mb-2 object-contain" />
-                            <h1 className="text-2xl font-bold uppercase tracking-wider mb-1">Laporan Guru Bertugas Harian</h1>
-                            <h2 className="text-xl font-bold text-red-600 uppercase">SMK Kem Terendak, Melaka</h2>
+                    <div className="bg-white p-8 md:p-12 rounded-2xl shadow-2xl border border-slate-200 print:shadow-none print:border-none print:p-0 print:rounded-none">
+                        <div className="text-center mb-10 border-b-2 border-slate-800 pb-6">
+                            <img src="./LOGO-SMKKT.png" alt="Logo Sekolah" className="w-20 h-20 mx-auto mb-3 object-contain print:grayscale" />
+                            <h1 className="text-2xl font-bold uppercase tracking-wider mb-1 text-slate-900">Laporan Guru Bertugas Harian</h1>
+                            <h2 className="text-xl font-bold text-slate-700 uppercase">SMK Kem Terendak, Melaka</h2>
                             
-                            <div className="flex justify-center gap-8 mt-6">
-                                <div className="bg-slate-50 px-6 py-2 rounded-lg border font-semibold">
-                                    <span className="text-slate-500 text-xs block uppercase">Tarikh</span>
+                            <div className="flex justify-center gap-6 mt-6">
+                                <div className="bg-slate-50 px-6 py-2.5 rounded-lg border border-slate-200 font-semibold shadow-sm">
+                                    <span className="text-slate-500 text-xs block uppercase tracking-wider mb-0.5">Tarikh</span>
                                     {date}
                                 </div>
-                                <div className="bg-slate-50 px-6 py-2 rounded-lg border font-semibold">
-                                    <span className="text-slate-500 text-xs block uppercase">Hari</span>
+                                <div className="bg-slate-50 px-6 py-2.5 rounded-lg border border-slate-200 font-semibold shadow-sm">
+                                    <span className="text-slate-500 text-xs block uppercase tracking-wider mb-0.5">Hari</span>
                                     {reportData.day}
                                 </div>
-                                <div className="bg-slate-50 px-6 py-2 rounded-lg border font-semibold">
-                                    <span className="text-slate-500 text-xs block uppercase">Minggu</span>
+                                <div className="bg-slate-50 px-6 py-2.5 rounded-lg border border-slate-200 font-semibold shadow-sm">
+                                    <span className="text-slate-500 text-xs block uppercase tracking-wider mb-0.5">Minggu</span>
                                     {reportData.week}
                                 </div>
                             </div>
                         </div>
 
-                        <div className="mb-6">
-                            <h3 className="font-bold text-lg bg-red-50 p-2 border-l-4 border-red-600 mb-3 text-red-900">A. SENARAI GURU BERTUGAS</h3>
+                        <div className="mb-8">
+                            <h3 className="font-bold text-lg bg-slate-100 p-2.5 border-l-4 border-slate-800 mb-4 text-slate-900 shadow-sm rounded-r">A. SENARAI GURU BERTUGAS</h3>
                             <table className="w-full border-collapse border border-slate-300">
                                 <tbody>
                                     {[1,2,3,4,5].map(id => {
                                         const taskName = DUTIES.find(d=>d.id === id).title;
-                                        const teacher = reportData.tasks[id]?.teacherName || <span className="text-red-500 italic">Belum diisi</span>;
+                                        const teacher = t[id]?.teacherName || <span className="text-slate-400 italic font-normal">Belum diisi</span>;
                                         return (
                                             <tr key={id} className="border-b border-slate-300">
-                                                <td className="p-2 border-r border-slate-300 font-medium w-8 text-center">{id}</td>
-                                                <td className="p-2 border-r border-slate-300 font-bold text-slate-900 w-1/2">{teacher}</td>
-                                                <td className="p-2 text-sm">{taskName}</td>
+                                                <td className="p-3 border-r border-slate-300 font-bold w-12 text-center bg-slate-50">{id}</td>
+                                                <td className="p-3 border-r border-slate-300 font-bold text-slate-900 w-1/2">{teacher}</td>
+                                                <td className="p-3 text-sm text-slate-700">{taskName}</td>
                                             </tr>
                                         )
                                     })}
@@ -978,128 +998,112 @@
                             </table>
                         </div>
 
-                        <div className="mb-6 print-break-inside-avoid">
-                            <h3 className="font-bold text-lg bg-red-50 p-2 border-l-4 border-red-600 mb-3 text-red-900">B. KEHADIRAN GURU DAN AKP</h3>
+                        <div className="mb-8 print-break-inside-avoid">
+                            <h3 className="font-bold text-lg bg-slate-100 p-2.5 border-l-4 border-slate-800 mb-4 text-slate-900 shadow-sm rounded-r">B. KEHADIRAN GURU DAN AKP</h3>
                             <div className="flex gap-4 mb-4">
-                                <table className="border-collapse border border-slate-300 w-1/2">
-                                    <thead><tr className="bg-slate-100"><th className="p-2 border border-slate-300 text-left">Kategori</th><th className="p-2 border border-slate-300 text-center">Hadir</th><th className="p-2 border border-slate-300 text-center">Jumlah</th></tr></thead>
+                                <table className="border-collapse border border-slate-300 w-full md:w-2/3">
+                                    <thead><tr className="bg-slate-100"><th className="p-2 border border-slate-300 text-left">Kategori Staf</th><th className="p-2 border border-slate-300 text-center w-24">Hadir</th><th className="p-2 border border-slate-300 text-center w-24">Jumlah</th></tr></thead>
                                     <tbody>
-                                        <tr><td className="p-2 border border-slate-300 font-semibold">GURU</td><td className="p-2 border border-slate-300 text-center">{t5.guru_hadir || '-'}</td><td className="p-2 border border-slate-300 text-center">{t5.guru_total || '-'}</td></tr>
-                                        <tr><td className="p-2 border border-slate-300 font-semibold">AKP</td><td className="p-2 border border-slate-300 text-center">{t5.akp_hadir || '-'}</td><td className="p-2 border border-slate-300 text-center">{t5.akp_total || '-'}</td></tr>
+                                        <tr><td className="p-3 border border-slate-300 font-semibold">Guru Sokongan</td><td className="p-3 border border-slate-300 text-center font-bold">{t[5]?.guru_hadir || '-'}</td><td className="p-3 border border-slate-300 text-center">{t[5]?.guru_total || '-'}</td></tr>
+                                        <tr><td className="p-3 border border-slate-300 font-semibold">Anggota Kumpulan Pelaksana (AKP)</td><td className="p-3 border border-slate-300 text-center font-bold">{t[5]?.akp_hadir || '-'}</td><td className="p-3 border border-slate-300 text-center">{t[5]?.akp_total || '-'}</td></tr>
                                     </tbody>
                                 </table>
                             </div>
-                            {t5.guru_tak_hadir && (
-                                <div className="mb-2">
-                                    <p className="font-bold text-sm underline mb-1">Senarai Nama Staf Tidak Hadir / Catatan:</p>
-                                    <div className="pl-4 text-sm whitespace-pre-line">{t5.guru_tak_hadir}</div>
+                            {t[5]?.guru_tak_hadir && (
+                                <div className="mb-2 bg-slate-50 p-4 rounded border border-slate-200">
+                                    <p className="font-bold text-sm mb-2 text-slate-700 uppercase tracking-wide">Senarai Nama Staf Tidak Hadir / Catatan Khusus:</p>
+                                    <div className="text-sm whitespace-pre-line pl-2 border-l-2 border-slate-300">{t[5].guru_tak_hadir}</div>
                                 </div>
                             )}
                         </div>
 
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6 print-break-inside-avoid">
-                            <div className="border border-slate-300 p-4 rounded bg-slate-50/50">
-                                <h3 className="font-bold border-b border-slate-300 pb-2 mb-3 text-red-800">C. LAPORAN PERHIMPUNAN & PENGUMUMAN</h3>
-                                <div>{renderText(t1.notes)}</div>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8 print-break-inside-avoid">
+                            <div className="border border-slate-300 p-5 rounded-lg bg-slate-50">
+                                <h3 className="font-bold border-b-2 border-slate-300 pb-2 mb-3 text-slate-800 uppercase tracking-wide text-sm">C. Laporan Perhimpunan</h3>
+                                <div className="text-sm leading-relaxed">{renderText(t[1]?.notes)}</div>
                             </div>
-                            <div className="border border-slate-300 p-4 rounded bg-slate-50/50">
-                                <h3 className="font-bold border-b border-slate-300 pb-2 mb-3 text-red-800">D. KAWALAN PINTU MASUK PAGI</h3>
-                                <p className="mb-2"><span className="font-semibold">Status:</span> {t2.status ? <span className="px-2 py-1 bg-white border rounded shadow-sm text-sm">{t2.status}</span> : '-'}</p>
-                                <p className="font-semibold mt-3 mb-1">Catatan/Isu:</p>
-                                <div>{renderText(t2.notes)}</div>
+                            <div className="border border-slate-300 p-5 rounded-lg bg-slate-50">
+                                <h3 className="font-bold border-b-2 border-slate-300 pb-2 mb-3 text-slate-800 uppercase tracking-wide text-sm">D. Kawalan Pintu Masuk</h3>
+                                <p className="mb-3 text-sm"><span className="font-semibold text-slate-600">Status Kawalan:</span> {t[2]?.status ? <span className="ml-2 font-bold bg-white px-2 py-1 border rounded shadow-sm">{t[2].status}</span> : '-'}</p>
+                                <p className="font-semibold text-sm mb-1 text-slate-600">Catatan/Isu Berbangkit:</p>
+                                <div className="text-sm leading-relaxed">{renderText(t[2]?.notes)}</div>
                             </div>
                         </div>
 
-                        <div className="mb-6 border border-slate-300 p-4 rounded print-break-inside-avoid">
-                            <h3 className="font-bold border-b border-slate-300 pb-2 mb-3 text-red-800">E. KAWALAN WAKTU REHAT DI KANTIN & KOPERASI</h3>
-                            <div className="flex flex-wrap gap-x-8 gap-y-2 mb-4">
-                                <p><span className="font-semibold text-slate-500">Kantin:</span> {t3.canteen_clean || '-'}</p>
-                                <p><span className="font-semibold text-slate-500">Koperasi:</span> {t3.coop_clean || '-'}</p>
-                                <p><span className="font-semibold text-slate-500">Disiplin Murid:</span> {t3.discipline || '-'}</p>
+                        <div className="mb-8 border border-slate-300 p-5 rounded-lg print-break-inside-avoid">
+                            <h3 className="font-bold border-b-2 border-slate-300 pb-2 mb-4 text-slate-800 uppercase tracking-wide text-sm">E. Kawalan Waktu Rehat & Koperasi</h3>
+                            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-5 bg-slate-50 p-3 rounded border border-slate-200">
+                                <p className="text-sm"><span className="font-semibold text-slate-500 block mb-1">Kebersihan Kantin</span> <span className="font-bold text-base">{t[3]?.canteen_clean || '-'}</span></p>
+                                <p className="text-sm"><span className="font-semibold text-slate-500 block mb-1">Kawasan Koperasi</span> <span className="font-bold text-base">{t[3]?.coop_clean || '-'}</span></p>
+                                <p className="text-sm"><span className="font-semibold text-slate-500 block mb-1">Disiplin Murid</span> <span className="font-bold text-base">{t[3]?.discipline || '-'}</span></p>
                             </div>
-                            <p className="font-semibold mb-1">Catatan:</p>
-                            <div>{renderText(t3.notes)}</div>
+                            <p className="font-semibold text-sm mb-1 text-slate-600">Catatan/Laporan Lanjut:</p>
+                            <div className="text-sm leading-relaxed">{renderText(t[3]?.notes)}</div>
                         </div>
 
-                        <div className="mb-6 border border-slate-300 p-4 rounded print-break-inside-avoid">
-                            <h3 className="font-bold border-b border-slate-300 pb-2 mb-3 text-red-800">F. RONDAAN BLOK, SURAU DAN TANDAS</h3>
-                            <div className="grid grid-cols-2 md:grid-cols-3 gap-2 mb-4">
-                                <p><span className="text-slate-500">Blok Kelas:</span> <span className="font-semibold">{t4.block_clean || '-'}</span></p>
-                                <p><span className="text-slate-500">Surau Lelaki:</span> <span className="font-semibold">{t4.surau_l || '-'}</span></p>
-                                <p><span className="text-slate-500">Surau Pmpn:</span> <span className="font-semibold">{t4.surau_p || '-'}</span></p>
-                                <p><span className="text-slate-500">Tandas Lelaki:</span> <span className="font-semibold">{t4.tandas_l || '-'}</span></p>
-                                <p><span className="text-slate-500">Tandas Pmpn:</span> <span className="font-semibold">{t4.tandas_p || '-'}</span></p>
+                        <div className="mb-8 border border-slate-300 p-5 rounded-lg print-break-inside-avoid">
+                            <h3 className="font-bold border-b-2 border-slate-300 pb-2 mb-4 text-slate-800 uppercase tracking-wide text-sm">F. Rondaan Blok, Surau & Tandas</h3>
+                            <div className="flex flex-wrap gap-3 mb-5">
+                                {['Blok Kelas: ' + (t[4]?.block_clean||'-'), 'Surau Lelaki: ' + (t[4]?.surau_l||'-'), 'Surau Perempuan: ' + (t[4]?.surau_p||'-'), 'Tandas Lelaki: ' + (t[4]?.tandas_l||'-'), 'Tandas Perempuan: ' + (t[4]?.tandas_p||'-')].map((item, i) => (
+                                    <span key={i} className="bg-slate-50 border border-slate-200 px-3 py-1.5 rounded text-sm"><span className="text-slate-500">{item.split(':')[0]}:</span> <span className="font-bold ml-1">{item.split(':')[1]}</span></span>
+                                ))}
                             </div>
-                            <p className="font-semibold mb-1">Catatan/Isu Kerosakan:</p>
-                            <div className="text-red-700">{renderText(t4.notes)}</div>
+                            <p className="font-semibold text-sm mb-1 text-slate-600">Catatan Pemantauan / Kerosakan Fizikal:</p>
+                            <div className="text-sm leading-relaxed text-slate-800 bg-white p-3 border border-slate-200 rounded">{renderText(t[4]?.notes)}</div>
                         </div>
 
-                        <div className="mb-6 border border-slate-300 p-4 rounded print-break-inside-avoid">
-                            <h3 className="font-bold border-b border-slate-300 pb-2 mb-3 text-red-800">G. KEHADIRAN MURID & AKTIVITI</h3>
-                            <table className="w-full mb-3 border border-slate-200">
+                        <div className="mb-8 print-break-inside-avoid">
+                            <h3 className="font-bold text-lg bg-slate-100 p-2.5 border-l-4 border-slate-800 mb-4 text-slate-900 shadow-sm rounded-r">G. KEHADIRAN MURID & AKTIVITI PETANG</h3>
+                            <table className="w-full mb-3 border-collapse border border-slate-300">
                                 <tbody>
-                                    <tr className="border-b"><td className="p-2 bg-slate-50 font-semibold w-1/3">Kehadiran Murid</td><td className="p-2">{t5.murid_hadir || '-'} / {t5.murid_total || '-'}</td></tr>
-                                    <tr className="border-b"><td className="p-2 bg-slate-50 font-semibold align-top">Murid Sakit / Pulang</td><td className="p-2 whitespace-pre-line">{t5.murid_sakit || '-'}</td></tr>
-                                    <tr><td className="p-2 bg-slate-50 font-semibold">Aktiviti Selepas Waktu</td><td className="p-2">{t5.aktiviti || '-'}</td></tr>
+                                    <tr><td className="p-3 border border-slate-300 bg-slate-50 font-semibold w-1/3 text-sm">Jumlah Kehadiran Murid</td><td className="p-3 border border-slate-300 font-bold text-lg">{t[5]?.murid_hadir || '-'} / {t[5]?.murid_total || '-'}</td></tr>
+                                    <tr><td className="p-3 border border-slate-300 bg-slate-50 font-semibold align-top text-sm">Senarai Murid Sakit / Pulang Awal</td><td className="p-3 border border-slate-300 whitespace-pre-line text-sm leading-relaxed">{t[5]?.murid_sakit || '-'}</td></tr>
+                                    <tr><td className="p-3 border border-slate-300 bg-slate-50 font-semibold align-top text-sm">Rekod Aktiviti Selepas Waktu Persekolahan</td><td className="p-3 border border-slate-300 text-sm">{formatAktiviti(t[5]?.aktiviti)}</td></tr>
                                 </tbody>
                             </table>
                         </div>
 
-                        <div className="mb-6 print-break-inside-avoid">
-                            <h3 className="font-bold text-lg bg-red-50 p-2 border-l-4 border-red-600 mb-3 text-red-900">H. LAPORAN BERGAMBAR</h3>
+                        <div className="mb-8 print-break-inside-avoid">
+                            <h3 className="font-bold text-lg bg-slate-100 p-2.5 border-l-4 border-slate-800 mb-4 text-slate-900 shadow-sm rounded-r">H. LAMPIRAN BERGAMBAR</h3>
                             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                                {[t1, t2, t3, t4].map((t, idx) => (
-                                    t && t.image ? (
-                                        <div key={idx} className="border p-2 rounded shadow-sm text-center bg-white">
-                                            <DriveImage
-                                                url={t.image}
-                                                alt={`Gambar Tugasan ${idx+1}`}
-                                                className="w-full h-48 object-contain rounded mb-2 bg-slate-100"
-                                            />
-                                            <a
-                                                href={t.image}
-                                                target="_blank"
-                                                rel="noopener noreferrer"
-                                                className="inline-block text-xs text-red-600 hover:text-red-800 underline mb-2"
-                                            >
-                                                Buka gambar
-                                            </a>
-                                            <span className="text-xs font-semibold text-slate-500 uppercase block">{DUTIES[idx].short}</span>
+                                {[1, 2, 3, 4].map((id) => (
+                                    t[id]?.image ? (
+                                        <div key={id} className="border border-slate-300 p-2 rounded shadow-sm text-center bg-slate-50">
+                                            <DriveImage url={t[id].image} alt={`Gambar Tugas ${id}`} className="w-full h-40 object-cover rounded mb-2 border border-slate-200" />
+                                            <a href={t[id].image} target="_blank" rel="noopener noreferrer" className="inline-block text-xs text-indigo-600 hover:text-indigo-800 underline mb-2 font-medium">Buka Fail Gambar</a>
+                                            <span className="text-[10px] font-bold text-slate-600 uppercase tracking-wider block bg-white py-1 rounded border">{DUTIES[id-1].short}</span>
                                         </div>
                                     ) : null
                                 ))}
-                                {(!t1?.image && !t2?.image && !t3?.image && !t4?.image) && (
-                                    <p className="col-span-4 text-center italic text-slate-400 p-4 border border-dashed">Tiada gambar dimuat naik.</p>
+                                {(!t[1]?.image && !t[2]?.image && !t[3]?.image && !t[4]?.image) && (
+                                    <p className="col-span-4 text-center italic text-slate-400 p-6 border-2 border-dashed border-slate-300 rounded-lg">Tiada lampiran gambar dimuat naik untuk hari ini.</p>
                                 )}
                             </div>
                         </div>
 
-                        <div className="mt-10 border-t-2 border-dashed pt-6 print-break-inside-avoid">
-                            <h3 className="font-bold text-lg mb-2 flex items-center gap-2">
-                                <i className="ph-fill ph-seal-check text-red-600"></i> Ulasan Pentadbir
+                        <div className="mt-12 border-t-2 border-slate-800 pt-6 print-break-inside-avoid">
+                            <h3 className="font-bold text-lg mb-3 flex items-center gap-2 uppercase tracking-wide text-slate-900">
+                                <i className="ph-fill ph-seal-check text-2xl text-slate-800"></i> Ruangan Ulasan Pentadbir
                             </h3>
                             
                             {user?.role === 'admin' ? (
-                                <div className="no-print bg-slate-50 p-4 rounded-lg border border-slate-300 mt-3 shadow-inner">
+                                <div className="no-print bg-slate-50 p-5 rounded-lg border border-slate-300 shadow-inner mt-4">
                                     <textarea 
-                                        className="w-full border border-slate-300 rounded p-3 text-sm focus:ring-2 focus:ring-red-600 outline-none bg-white" 
+                                        className="w-full border border-slate-300 rounded-lg p-4 text-sm focus:ring-2 focus:ring-indigo-400 outline-none bg-white shadow-sm resize-y" 
                                         rows="3" 
-                                        placeholder="Sila masukkan ulasan atau tindakan susulan..."
+                                        placeholder="Sila masukkan ulasan rasmi atau arahan tindakan susulan di sini..."
                                         value={comment}
                                         onChange={(e) => setComment(e.target.value)}
                                     ></textarea>
-                                    <button 
-                                        onClick={() => onSaveComment(comment)}
-                                        className="mt-3 bg-slate-900 text-white px-6 py-2.5 rounded-lg text-sm font-bold hover:bg-slate-800 shadow flex items-center gap-2"
-                                    >
-                                        <i className="ph-bold ph-floppy-disk"></i> Simpan Ulasan
+                                    <button onClick={() => onSaveComment(comment)} className="mt-4 bg-slate-800 text-white px-6 py-3 rounded-lg text-sm font-bold hover:bg-slate-700 shadow-md flex items-center gap-2 transition-colors">
+                                        <i className="ph-bold ph-floppy-disk text-lg"></i> Simpan & Kemas Kini Ulasan
                                     </button>
                                 </div>
                             ) : null}
 
                             {(reportData.admin_comment || user?.role !== 'admin') && (
-                                <div className="mt-4 p-5 border-l-4 border-slate-900 bg-slate-50 italic text-slate-800 min-h-[60px] rounded-r">
-                                    {reportData.admin_comment ? `"${reportData.admin_comment}"` : "Belum ada ulasan daripada pentadbir."}
+                                <div className="mt-4 p-6 border-l-4 border-slate-800 bg-slate-50 italic text-slate-800 text-base leading-relaxed rounded-r shadow-sm font-medium">
+                                    {reportData.admin_comment ? `"${reportData.admin_comment}"` : <span className="text-slate-400 font-normal">Belum ada ulasan atau maklum balas daripada pihak pentadbir.</span>}
                                 </div>
                             )}
                         </div>
