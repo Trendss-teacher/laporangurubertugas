@@ -412,10 +412,14 @@
                         {urls.map((url, i) => (
                             <div key={i} className="border border-slate-200 p-1.5 rounded bg-white group shadow-sm">
                                 <img
-									src={url.replace(
-										"https://drive.google.com/uc?export=view&id=",
-										"https://drive.google.com/thumbnail?id="
-									) + "&sz=w1000"}
+									src={
+										url.startsWith("data:image")
+											? url
+											: url.replace(
+												"https://drive.google.com/uc?export=view&id=",
+												"https://drive.google.com/thumbnail?id="
+											  ) + "&sz=w1000"
+									}
 									className="w-full h-32 object-cover rounded"
 									alt="Lampiran"
 									onError={e => {
