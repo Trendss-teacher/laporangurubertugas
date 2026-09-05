@@ -666,6 +666,14 @@
                         {(view === 'admin' || view === 'list') && <AdminDashboard reports={reports} role={user.role} onViewReport={d=>{setDate(d);setView('report');}} />}
                         {view === 'report' && <CombinedReport reportData={reports[date]} date={date} user={user} onSaveComment={saveComment} />}
                     </main>
+					<div className="text-center text-[10px] text-slate-500 mt-8 mb-4">
+					    <div className="font-semibold tracking-wide">
+					        Dibangunkan oleh ASYE
+					    </div>
+					    <div className="opacity-70">
+					        Unit ICT TRENDSS
+					    </div>
+					</div>
                 </div>
             );
         };
