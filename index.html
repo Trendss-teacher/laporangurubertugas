@@ -36,6 +36,13 @@
     <script type="text/babel">
         const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbz6mGf_m7gCc3uKzEOcl7sDmsmx7fSUCVE_5K4fU5rlj9Y_tzNo1OdLSI4uGS4j2nrD7Q/exec";
         
+		const formatDateDisplay = (dateStr) => {
+			if (!dateStr) return "";
+			const parts = dateStr.split("-");
+			if (parts.length !== 3) return dateStr;
+			return `${parts[2]}/${parts[1]}/${parts[0]}`;
+		};
+				
 		const getTodayMalaysia = () => {
 			const now = new Date();
 			const malaysia = new Date(
@@ -484,7 +491,7 @@
                             <h1 className="text-2xl font-bold uppercase mb-1 tracking-wide">Laporan Guru Bertugas</h1>
                             <h2 className="text-xl font-bold text-slate-700 uppercase">SMK Kem Terendak</h2>
                             <div className="flex justify-center gap-4 mt-5">
-                                <div className="bg-slate-50 px-4 py-2 rounded-lg border text-sm font-bold shadow-sm">{date}</div>
+                                <div className="bg-slate-50 px-4 py-2 rounded-lg border text-sm font-bold shadow-sm">{formatDateDisplay(date)}</div>
                                 <div className="bg-slate-50 px-4 py-2 rounded-lg border text-sm font-bold shadow-sm">{reportData.day}</div>
                                 <div className="bg-slate-50 px-4 py-2 rounded-lg border text-sm font-bold shadow-sm">Minggu {reportData.week}</div>
                             </div>
@@ -618,7 +625,7 @@
                                 const count = Object.keys(r.tasks||{}).length;
                                 const isComplete = count === 5;
                                 return (
-                                <tr key={r.date} className="border-b border-white/5 hover:bg-white/5 transition-colors"><td className="p-4"><div className="font-bold text-white text-lg">{r.date}</div><div className="text-[10px] text-indigo-300 uppercase tracking-widest mt-1 font-bold">{r.day}</div></td>
+                                <tr key={r.date} className="border-b border-white/5 hover:bg-white/5 transition-colors"><td className="p-4"><div className="font-bold text-white text-lg">{formatDateDisplay(r.date)}</div><div className="text-[10px] text-indigo-300 uppercase tracking-widest mt-1 font-bold">{r.day}</div></td>
                                 <td className="p-4 text-center text-slate-300 font-bold">{r.week||'-'}</td>
                                 <td className="p-4 text-center"><span className={`px-3 py-1.5 rounded-lg border text-xs font-bold ${isComplete?'bg-indigo-500/20 text-indigo-300 border-indigo-500/30':'bg-black/30 text-white border-white/10'}`}>{count} / 5</span></td>
                                 <td className="p-4 text-center">{r.status === 'reviewed' ? <span className="text-emerald-400 text-sm font-bold bg-emerald-500/10 px-3 py-1.5 rounded-full border border-emerald-500/20 shadow-sm flex items-center justify-center gap-1.5 w-max mx-auto"><i className="ph-fill ph-check-circle"></i> Disemak</span> : isComplete ? <span className="text-indigo-300 text-sm font-medium">Menunggu</span> : <span className="text-slate-500 text-sm italic">Tak Lengkap</span>}</td>
