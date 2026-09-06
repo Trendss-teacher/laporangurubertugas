@@ -36,6 +36,17 @@
     <script type="text/babel">
         const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbz6mGf_m7gCc3uKzEOcl7sDmsmx7fSUCVE_5K4fU5rlj9Y_tzNo1OdLSI4uGS4j2nrD7Q/exec";
         
+		const getTodayMalaysia = () => {
+			const now = new Date();
+			const malaysia = new Date(
+				now.toLocaleString('en-US', {
+					timeZone: 'Asia/Kuala_Lumpur'
+				})
+			);
+
+			return malaysia.toISOString().split('T')[0];
+		};
+		
         const DUTIES = [
             { id: 1, title: "MENGURUS PERHIMPUNAN PAGI DAN CATATAN", short: "Perhimpunan" },
             { id: 2, title: "MENGAWAL PINTU MASUK PAGI", short: "Pintu Masuk" },
@@ -248,7 +259,7 @@
         };
 
         const DutyForm = ({ user, saveReport, reports, getDayName, showToast }) => {
-            const [date, setDate] = React.useState(new Date().toISOString().split('T')[0]);
+            const [date, setDate] = React.useState(getTodayMalaysia());
             const [week, setWeek] = React.useState("");
             const [dutyId, setDutyId] = React.useState("");
             const [taskData, setTaskData] = React.useState({});
@@ -620,7 +631,13 @@
         };
 
         const App = () => {
-            const [teachers, setTeachers] = React.useState([]); const [loading, setLoading] = React.useState(true); const [user, setUser] = React.useState(null); const [reports, setReports] = React.useState({}); const [view, setView] = React.useState('login'); const [date, setDate] = React.useState(new Date().toISOString().split('T')[0]); const [toast, setToast] = React.useState(null);
+            const [teachers, setTeachers] = React.useState([]); 
+			const [loading, setLoading] = React.useState(true); 
+			const [user, setUser] = React.useState(null); 
+			const [reports, setReports] = React.useState({}); 
+			const [view, setView] = React.useState('login'); 
+			const [date, setDate] = React.useState(getTodayMalaysia()); 
+			const [toast, setToast] = React.useState(null);
             
             React.useEffect(() => { fetch(GOOGLE_SCRIPT_URL).then(r=>r.json()).then(d=>{if(d.teachers)setTeachers(d.teachers);if(d.reports)setReports(d.reports);setLoading(false);}).catch(()=>setLoading(false)); }, []);
             const getDay = d => isNaN(new Date(d))?'':['AHAD','ISNIN','SELASA','RABU','KHAMIS','JUMAAT','SABTU'][new Date(d).getDay()];
@@ -667,12 +684,12 @@
                         {view === 'report' && <CombinedReport reportData={reports[date]} date={date} user={user} onSaveComment={saveComment} />}
                     </main>
 					<div className="text-center text-[10px] text-slate-500 mt-8 mb-4">
-					    <div className="font-semibold tracking-wide">
-					        Dibangunkan oleh ASYE
-					    </div>
-					    <div className="opacity-70">
-					        Unit ICT TRENDSS
-					    </div>
+						<div className="font-semibold tracking-wide">
+							Dibangunkan oleh ASYE
+						</div>
+						<div className="opacity-70">
+							Unit ICT TRENDSS
+						</div>
 					</div>
                 </div>
             );
