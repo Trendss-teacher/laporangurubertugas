@@ -35,6 +35,18 @@
     <div id="root"></div>
     <script type="text/babel">
         const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbz6mGf_m7gCc3uKzEOcl7sDmsmx7fSUCVE_5K4fU5rlj9Y_tzNo1OdLSI4uGS4j2nrD7Q/exec";
+
+        // Semua permintaan ditulis/dibaca melalui satu fungsi. text/plain mengelakkan preflight CORS pada Apps Script.
+        const api = async (payload) => {
+            const res = await fetch(GOOGLE_SCRIPT_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify(payload) });
+            const d = await res.json();
+            if (d.status && d.status !== 'success') { const e = new Error(d.message || 'Ralat tidak diketahui.'); e.status = d.status; throw e; }
+            return d;
+        };
+        // Pemilik laporan = ID sama ATAU nama sama (rekod lama guna ID jenis "t_5")
+        const IMG_MIN = 2, IMG_MAX = 5, NO_IMG_DUTY = 5;
+        const normImg = (x) => typeof x === 'string' ? { src: x, caption: '' } : { src: x.url || x.src || '', caption: x.caption || '' };
+        const isOwner = (task, user) => !!task && !!user && ((task.teacherId && task.teacherId === user.id) || String(task.teacherName||'').trim().toUpperCase() === String(user.name||'').trim().toUpperCase());
         
 		const formatDateDisplay = (dateStr) => {
 			if (!dateStr) return "";
@@ -135,7 +147,7 @@
 
         const MultiImageUpload = ({ images, setImages, label }) => {
             const MAX_SIZE = 5 * 1024 * 1024; // 5MB
-            
+
             const compressImage = (file) => {
                 return new Promise((resolve) => {
                     const reader = new FileReader();
@@ -157,33 +169,41 @@
 
             const handleUpload = async (e) => {
                 const files = Array.from(e.target.files);
-                if (images.length + files.length > 3) { alert('Maksimum 3 gambar sahaja.'); return; }
+                if (images.length + files.length > IMG_MAX) { alert('Maksimum ' + IMG_MAX + ' gambar sahaja.'); e.target.value = ''; return; }
                 const newImages = [...images];
                 for(let file of files) {
                     if(!file.type.startsWith('image/')) continue;
                     if(file.size > MAX_SIZE && !window.confirm(`Saiz ${file.name} besar. Ia akan dikecilkan. Teruskan?`)) continue;
                     const b64 = await compressImage(file);
-                    newImages.push(b64);
+                    newImages.push({ src: b64, caption: '' });
                 }
                 setImages(newImages);
                 e.target.value = '';
             };
 
             const removeImage = (index) => { setImages(images.filter((_, i) => i !== index)); };
+            const setCaption = (index, text) => { setImages(images.map((im, i) => i === index ? { ...im, caption: text } : im)); };
+            const missing = Math.max(0, IMG_MIN - images.length);
 
             return (
                 <div className="mt-8 border-t border-white/10 pt-6">
-                    <label className="block text-sm font-semibold text-slate-300 mb-1">{label} (Maksimum 3)</label>
-                    <p className="text-xs text-slate-400 mb-4">Sila muat naik bukti bergambar berkaitan tugasan anda.</p>
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                        {images.map((src, i) => (
-                            <div key={i} className="relative h-32 rounded-xl border border-white/20 overflow-hidden group bg-black/50">
-                                <img src={src} className="w-full h-full object-cover" alt="Preview" />
-                                <button type="button" onClick={() => removeImage(i)} className="absolute inset-0 bg-red-500/80 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition backdrop-blur-sm text-xs font-bold gap-1"><i className="ph-bold ph-trash"></i> Padam</button>
+                    <label className="block text-sm font-semibold text-slate-300 mb-1">{label} (Minimum {IMG_MIN}, Maksimum {IMG_MAX})</label>
+                    <p className="text-xs text-slate-400 mb-1">Muat naik bukti bergambar dan tulis caption ringkas bagi setiap gambar.</p>
+                    <p className={`text-xs font-bold mb-4 ${missing > 0 ? 'text-amber-300' : 'text-emerald-400'}`}>{images.length} / {IMG_MAX} gambar{missing > 0 ? ` — tambah sekurang-kurangnya ${missing} lagi` : ''}</p>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        {images.map((im, i) => (
+                            <div key={i} className="rounded-xl border border-white/20 overflow-hidden bg-black/30">
+                                <div className="relative h-40 bg-black/50">
+                                    <img src={im.src.startsWith('data:image') ? im.src : im.src.replace('https://drive.google.com/uc?export=view&id=', 'https://drive.google.com/thumbnail?id=') + '&sz=w600'} className="w-full h-full object-cover" alt="Preview" />
+                                    <button type="button" onClick={() => removeImage(i)} className="absolute top-2 right-2 bg-rose-500/90 hover:bg-rose-500 text-white rounded-lg px-2.5 py-1.5 text-xs font-bold flex items-center gap-1"><i className="ph-bold ph-trash"></i> Padam</button>
+                                </div>
+                                <div className="p-3">
+                                    <input type="text" maxLength="120" placeholder={`Caption gambar ${i + 1} (wajib)`} value={im.caption} onChange={e => setCaption(i, e.target.value)} className={`w-full glass-input rounded-lg p-2.5 text-sm outline-none ${!im.caption.trim() ? 'border-amber-400/60' : ''}`} />
+                                </div>
                             </div>
                         ))}
-                        {images.length < 3 && (
-                            <label className="cursor-pointer bg-black/20 border-2 border-dashed border-white/20 hover:border-indigo-400 rounded-xl flex flex-col items-center justify-center h-32 transition group">
+                        {images.length < IMG_MAX && (
+                            <label className="cursor-pointer bg-black/20 border-2 border-dashed border-white/20 hover:border-indigo-400 rounded-xl flex flex-col items-center justify-center min-h-[10rem] transition group">
                                 <i className="ph ph-plus text-2xl text-slate-500 group-hover:text-indigo-400 mb-1"></i>
                                 <span className="text-[10px] font-medium text-slate-400 group-hover:text-indigo-300 text-center px-2">Tambah<br/>Gambar</span>
                                 <input type="file" accept="image/*" multiple onChange={handleUpload} className="hidden" />
@@ -245,51 +265,130 @@
         // --- MAIN APP VIEWS ---
 
         const LoginScreen = ({ onLogin, teachers, loading }) => {
-            const [sel, setSel] = React.useState(''); const [ic, setIc] = React.useState(''); const [err, setErr] = React.useState('');
+            const [mode, setMode] = React.useState('login');
+            const [sel, setSel] = React.useState(''); const [ic, setIc] = React.useState('');
+            const [regName, setRegName] = React.useState(''); const [regPin, setRegPin] = React.useState(''); const [regPin2, setRegPin2] = React.useState('');
+            const [err, setErr] = React.useState(''); const [ok, setOk] = React.useState(''); const [busy, setBusy] = React.useState(false);
+
+            const doLogin = async (e) => {
+                e.preventDefault(); setErr(''); setBusy(true);
+                try { const d = await api({ action: 'LOGIN', id: sel, pin: ic }); onLogin(d.user, ic, d); }
+                catch (ex) { setErr(ex.message); } finally { setBusy(false); }
+            };
+            const doRegister = async (e) => {
+                e.preventDefault(); setErr(''); setOk('');
+                if (!/^\d{4}$/.test(regPin)) return setErr('PIN mesti 4 digit nombor.');
+                if (regPin !== regPin2) return setErr('PIN tidak sepadan.');
+                setBusy(true);
+                try { const d = await api({ action: 'REGISTER', name: regName, pin: regPin }); setOk(d.message); setRegName(''); setRegPin(''); setRegPin2(''); }
+                catch (ex) { setErr(ex.message); } finally { setBusy(false); }
+            };
+            const tab = (m, t) => <button type="button" onClick={()=>{setMode(m);setErr('');setOk('');}} className={`flex-1 py-2 rounded-lg text-sm font-bold transition ${mode===m?'bg-indigo-500 text-white':'text-slate-300 hover:bg-white/10'}`}>{t}</button>;
             return (
                 <div className="min-h-screen flex items-center justify-center p-4">
                     <div className="glass-panel rounded-2xl p-8 w-full max-w-md relative z-10 text-center overflow-hidden">
                         <img src="./LOGO-SMKKT.png" className="w-24 h-24 mx-auto mb-4 bg-white/10 rounded-full p-2 backdrop-blur-sm" alt="Logo" />
                         <h2 className="text-2xl font-bold text-white">SMK KEM TERENDAK</h2>
-                        <p className="text-indigo-300 text-xs font-bold mb-8 uppercase tracking-wider mt-1">Sistem Laporan Guru Bertugas</p>
+                        <p className="text-indigo-300 text-xs font-bold mb-6 uppercase tracking-wider mt-1">Sistem Laporan Guru Bertugas</p>
                         {loading ? <div className="animate-pulse text-indigo-300 text-sm py-4 border border-indigo-500/30 bg-indigo-500/10 rounded-lg"><i className="ph-bold ph-spinner animate-spin text-xl mb-1 block"></i>Memuat turun data...</div> : (
-                            <form onSubmit={(e)=>{e.preventDefault(); const t = teachers.find(x=>x.id===sel); if(t && String(t.ic_last4)===String(ic)) onLogin(t); else setErr('Akaun / IC tidak sah');}} className="text-left space-y-4">
-                                {err && <div className="bg-rose-500/20 border border-rose-500/30 text-rose-200 p-3 rounded-lg text-sm flex items-center gap-2"><i className="ph-fill ph-warning-circle text-lg"></i> {err}</div>}
-                                <div><label className="text-xs font-bold text-slate-300">Pilih Nama</label><select className="w-full glass-input p-3 rounded-lg mt-1 outline-none" value={sel} onChange={e=>setSel(e.target.value)} required><option value="" disabled className="text-slate-800">-- Sila Pilih --</option>{teachers.map(t=><option key={t.id} value={t.id} className="text-slate-800">{t.name}</option>)}</select></div>
-                                <div><label className="text-xs font-bold text-slate-300">4 Digit Akhir Kad Pengenalan</label><input type="password" maxLength="4" placeholder="Cth: 5954" className="w-full glass-input p-3 rounded-lg mt-1 outline-none" value={ic} onChange={e=>setIc(e.target.value)} required/></div>
-                                <button type="submit" className="w-full bg-indigo-500 hover:bg-indigo-400 p-3.5 rounded-lg text-white font-bold shadow-[0_0_15px_rgba(99,102,241,0.4)] mt-4 transition-colors">Log Masuk</button>
-                            </form>
+                            <div className="text-left">
+                                <div className="flex gap-2 bg-black/20 p-1 rounded-xl mb-5">{tab('login','Log Masuk')}{tab('register','Daftar Guru Baharu')}</div>
+                                {err && <div className="bg-rose-500/20 border border-rose-500/30 text-rose-200 p-3 rounded-lg text-sm flex items-center gap-2 mb-4"><i className="ph-fill ph-warning-circle text-lg"></i> {err}</div>}
+                                {ok && <div className="bg-emerald-500/20 border border-emerald-500/30 text-emerald-200 p-3 rounded-lg text-sm flex items-center gap-2 mb-4"><i className="ph-fill ph-check-circle text-lg"></i> {ok}</div>}
+                                {mode === 'login' ? (
+                                    <form onSubmit={doLogin} className="space-y-4">
+                                        <div><label className="text-xs font-bold text-slate-300">Pilih Nama</label>
+                                            <select className="w-full glass-input p-3 rounded-lg mt-1 outline-none" value={sel} onChange={e=>setSel(e.target.value)} required>
+                                                <option value="" disabled className="text-slate-800">-- Sila Pilih Nama --</option>
+                                                {teachers.map(t=><option key={t.id} value={t.id} className="text-slate-800">{t.name}</option>)}
+                                            </select></div>
+                                        <div><label className="text-xs font-bold text-slate-300">4 Digit Akhir Kad Pengenalan</label>
+                                            <input type="password" inputMode="numeric" maxLength="4" placeholder="Cth: 5954" className="w-full glass-input p-3 rounded-lg mt-1 outline-none" value={ic} onChange={e=>setIc(e.target.value.replace(/\D/g,''))} required /></div>
+                                        <button type="submit" disabled={busy} className="w-full bg-indigo-500 hover:bg-indigo-400 disabled:opacity-50 p-3.5 rounded-lg text-white font-bold shadow-[0_0_15px_rgba(99,102,241,0.4)] mt-2 transition-colors">{busy?'Menyemak...':'Log Masuk'}</button>
+                                    </form>
+                                ) : (
+                                    <form onSubmit={doRegister} className="space-y-4">
+                                        <div><label className="text-xs font-bold text-slate-300">Nama Penuh (seperti dalam KP)</label>
+                                            <input type="text" className="w-full glass-input p-3 rounded-lg mt-1 outline-none uppercase" value={regName} onChange={e=>setRegName(e.target.value)} required /></div>
+                                        <div className="grid grid-cols-2 gap-3">
+                                            <div><label className="text-xs font-bold text-slate-300">4 Digit Akhir KP</label><input type="password" inputMode="numeric" maxLength="4" className="w-full glass-input p-3 rounded-lg mt-1 outline-none" value={regPin} onChange={e=>setRegPin(e.target.value.replace(/\D/g,''))} required /></div>
+                                            <div><label className="text-xs font-bold text-slate-300">Sahkan 4 Digit</label><input type="password" inputMode="numeric" maxLength="4" className="w-full glass-input p-3 rounded-lg mt-1 outline-none" value={regPin2} onChange={e=>setRegPin2(e.target.value.replace(/\D/g,''))} required /></div>
+                                        </div>
+                                        <p className="text-[11px] text-slate-400">Pendaftaran baharu perlu diluluskan oleh pentadbir sebelum anda boleh log masuk.</p>
+                                        <button type="submit" disabled={busy} className="w-full bg-indigo-500 hover:bg-indigo-400 disabled:opacity-50 p-3.5 rounded-lg text-white font-bold shadow-[0_0_15px_rgba(99,102,241,0.4)] transition-colors">{busy?'Menghantar...':'Daftar'}</button>
+                                    </form>
+                                )}
+                            </div>
                         )}
                     </div>
                 </div>
             );
         };
 
-        const DutyForm = ({ user, saveReport, reports, getDayName, showToast }) => {
-            const [date, setDate] = React.useState(getTodayMalaysia());
-            const [week, setWeek] = React.useState("");
-            const [dutyId, setDutyId] = React.useState("");
-            const [taskData, setTaskData] = React.useState({});
-            const [images, setImages] = React.useState([]); 
+        const MyReports = ({ reports, user, onOpen, onEdit, onDelete, onNew }) => {
+            const items = [];
+            Object.values(reports).forEach(r => Object.keys(r.tasks || {}).forEach(id => { const t = r.tasks[id]; if (isOwner(t, user)) items.push({ date: r.date, day: r.day, dutyId: Number(id), reviewed: r.status === 'reviewed', imgs: (t.images||[]).length }); }));
+            items.sort((a, b) => b.date.localeCompare(a.date) || a.dutyId - b.dutyId);
+            return (
+                <div className="max-w-3xl mx-auto">
+                    <div className="flex items-end justify-between mb-5"><div><h2 className="text-2xl font-bold text-white">Laporan Saya</h2><p className="text-sm text-indigo-200 mt-1">Anda hanya boleh mengedit atau memadam laporan anda sendiri.</p></div>
+                        <button onClick={onNew} className="bg-indigo-500 hover:bg-indigo-400 px-4 py-2 rounded-lg text-sm font-bold text-white flex items-center gap-2"><i className="ph-bold ph-plus"></i> Laporan Baharu</button></div>
+                    {items.length === 0 && <div className="glass-panel rounded-xl p-8 text-center text-slate-400 italic">Anda belum mempunyai sebarang laporan.</div>}
+                    <div className="space-y-3">{items.map(it => { const d = DUTIES.find(x => x.id === it.dutyId); return (
+                        <div key={it.date + it.dutyId} className="glass-panel rounded-xl p-4 flex flex-col sm:flex-row sm:items-center gap-3 justify-between">
+                            <div><div className="font-bold text-white">{formatDateDisplay(it.date)} <span className="text-[10px] text-indigo-300 uppercase tracking-widest ml-1">{it.day}</span></div>
+                                <div className="text-sm text-slate-300 mt-0.5">Tugas {it.dutyId}: {d ? d.short : ''}{it.imgs > 0 && <span className="text-slate-400"> · {it.imgs} gambar</span>}</div>
+                                {it.reviewed && <div className="text-[11px] text-emerald-400 font-bold mt-1 flex items-center gap-1"><i className="ph-fill ph-check-circle"></i> Telah disemak pentadbir</div>}</div>
+                            <div className="flex gap-2 flex-wrap">
+                                <button onClick={()=>onOpen(it.date)} className="bg-white/10 hover:bg-white/20 border border-white/10 px-3 py-2 rounded-lg text-xs font-bold text-white flex items-center gap-1.5"><i className="ph-bold ph-eye"></i> Lihat</button>
+                                <button onClick={()=>onEdit(it.date, it.dutyId)} className="bg-indigo-500/30 hover:bg-indigo-500/60 border border-indigo-400/40 px-3 py-2 rounded-lg text-xs font-bold text-white flex items-center gap-1.5"><i className="ph-bold ph-pencil-simple"></i> Edit</button>
+                                <button onClick={()=>onDelete(it.date, it.dutyId, it.reviewed)} className="bg-rose-500/30 hover:bg-rose-500/60 border border-rose-400/40 px-3 py-2 rounded-lg text-xs font-bold text-white flex items-center gap-1.5"><i className="ph-bold ph-trash"></i> Padam</button>
+                            </div></div>); })}</div>
+                </div>
+            );
+        };
+
+        const PendingTeachers = ({ pending, onDecide }) => (
+            <div className="glass-panel rounded-xl p-5 mb-6 border-amber-400/30">
+                <h3 className="font-bold text-amber-300 text-sm uppercase tracking-wide mb-3 flex items-center gap-2"><i className="ph-fill ph-user-plus text-lg"></i> Pendaftaran Guru Baharu ({pending.length})</h3>
+                <div className="space-y-2">{pending.map(p => (
+                    <div key={p.id} className="flex items-center justify-between gap-3 bg-black/20 rounded-lg p-3">
+                        <span className="text-sm font-medium text-white">{p.name}</span>
+                        <div className="flex gap-2"><button onClick={()=>onDecide(p.id,'APPROVE')} className="bg-emerald-500/30 hover:bg-emerald-500/60 border border-emerald-400/40 px-3 py-1.5 rounded-lg text-xs font-bold text-white">Lulus</button>
+                            <button onClick={()=>onDecide(p.id,'REJECT')} className="bg-rose-500/30 hover:bg-rose-500/60 border border-rose-400/40 px-3 py-1.5 rounded-lg text-xs font-bold text-white">Tolak</button></div>
+                    </div>))}</div>
+            </div>
+        );
+
+        const DutyForm = ({ user, saveReport, deleteReport, saving, initial, reports, getDayName, showToast }) => {
+            const init = initial ? reports[initial.date]?.tasks?.[initial.dutyId] : null;
+            const [date, setDate] = React.useState(initial ? initial.date : getTodayMalaysia());
+            const [week, setWeek] = React.useState(init?.week || "");
+            const [dutyId, setDutyId] = React.useState(initial ? Number(initial.dutyId) : "");
+            const [taskData, setTaskData] = React.useState(init ? init : {});
+            const [images, setImages] = React.useState((init?.images || []).map(normImg)); 
 
             const handleDutyChange = (id) => { 
                 setDutyId(Number(id)); 
                 const ext = reports[date]?.tasks?.[id];
-                if(ext) { setTaskData(ext); setImages(ext.images || []); setWeek(ext.week || ""); }
+                if(ext) { setTaskData(ext); setImages((ext.images || []).map(normImg)); setWeek(ext.week || ""); }
                 else { setTaskData({}); setImages([]); }
             };
 
             const existingReport = reports[date]?.tasks?.[dutyId];
-			const isLocked =
-				existingReport &&
-				existingReport.teacherId &&
-				existingReport.teacherId !== user.id;
+			const isLocked = existingReport && !isOwner(existingReport, user);
+			const isEditingOwn = existingReport && isOwner(existingReport, user);
 
-            const handleSubmit = (e) => {
+            const handleSubmit = async (e) => {
                 e.preventDefault();
                 if(isLocked) return showToast('Telah diisi oleh guru lain.');
-                saveReport(date, dutyId, { ...taskData, week }, images);
-                setDutyId(""); setTaskData({}); setImages([]);
+                if (dutyId !== NO_IMG_DUTY) {
+                    if (images.length < IMG_MIN) return showToast('Sila muat naik sekurang-kurangnya ' + IMG_MIN + ' gambar.', 5000);
+                    const bad = images.findIndex(im => !im.caption.trim());
+                    if (bad > -1) return showToast('Sila isi caption bagi gambar ' + (bad + 1) + '.', 5000);
+                }
+                const okSaved = await saveReport(date, dutyId, { ...taskData, week }, images);
+                if (okSaved) { setDutyId(""); setTaskData({}); setImages([]); }
             };
 
             return (
@@ -307,6 +406,8 @@
 
                     {dutyId && isLocked && <div className="glass-panel bg-rose-500/10 border border-rose-500/30 p-5 rounded-xl mb-6 text-rose-200 flex items-start gap-4 shadow-md"><i className="ph-fill ph-lock-key text-3xl text-rose-400"></i><div><h4 className="font-bold text-lg">Telah Diisi</h4><p className="text-sm mt-1">Tugasan dilengkapkan oleh: <strong className="text-white border-b border-rose-300/50">{existingReport.teacherName}</strong></p></div></div>}
                     
+                    {dutyId && isEditingOwn && <div className="glass-panel bg-indigo-500/10 border border-indigo-400/30 p-4 rounded-xl mb-6 text-indigo-100 flex items-center justify-between gap-3 flex-wrap"><div className="flex items-center gap-3 text-sm"><i className="ph-fill ph-pencil-simple-line text-2xl text-indigo-300"></i><span>Anda sedang <b>mengedit laporan anda sendiri</b> untuk tugasan ini.</span></div><button type="button" onClick={()=>deleteReport(date, dutyId, reports[date]?.status==='reviewed').then(d=>{ if(d){setDutyId('');setTaskData({});setImages([]);} })} className="bg-rose-500/30 hover:bg-rose-500/60 border border-rose-400/40 px-3 py-2 rounded-lg text-xs font-bold text-white flex items-center gap-1.5"><i className="ph-bold ph-trash"></i> Padam Laporan</button></div>}
+
                     {dutyId && !isLocked && (
                         <form onSubmit={handleSubmit} className="space-y-6">
                             {dutyId === 1 && (
@@ -414,7 +515,7 @@
                                 </FormSection>
                             )}
 
-                            <button type="submit" className="w-full bg-indigo-500 hover:bg-indigo-400 p-4 rounded-xl text-white font-bold text-lg shadow-[0_0_20px_rgba(99,102,241,0.4)] mt-6 transition-all flex justify-center items-center gap-2"><i className="ph-bold ph-paper-plane-right"></i> Hantar Laporan</button>
+                            <button type="submit" disabled={saving} className="disabled:opacity-50 w-full bg-indigo-500 hover:bg-indigo-400 p-4 rounded-xl text-white font-bold text-lg shadow-[0_0_20px_rgba(99,102,241,0.4)] mt-6 transition-all flex justify-center items-center gap-2"><i className="ph-bold ph-paper-plane-right"></i> {saving ? 'Menyimpan...' : (isEditingOwn ? 'Kemaskini Laporan' : 'Hantar Laporan')}</button>
                         </form>
                     )}
                 </div>
@@ -423,31 +524,22 @@
 
         const DriveImageGallery = ({ urls, title }) => {
             if(!urls || urls.length === 0) return null;
+            const items = urls.map(normImg);
             return (
                 <div className="mb-5 bg-slate-50 p-4 rounded-lg border border-slate-200">
                     <span className="text-xs font-bold text-indigo-800 uppercase tracking-wider block border-b-2 border-indigo-200 pb-1 mb-3">{title}</span>
                     <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                        {urls.map((url, i) => (
-                            <div key={i} className="border border-slate-200 p-1.5 rounded bg-white group shadow-sm">
-                                <img
-									src={
-										url.startsWith("data:image")
-											? url
-											: url.replace(
-												"https://drive.google.com/uc?export=view&id=",
-												"https://drive.google.com/thumbnail?id="
-											  ) + "&sz=w1000"
-									}
-									className="w-full h-32 object-cover rounded"
-									alt="Lampiran"
-									onError={e => {
-										e.target.parentElement.innerHTML =
-											'<div class="text-xs text-rose-500 flex h-full items-center justify-center font-medium bg-rose-50 rounded border border-rose-200">Gagal Paparan. Sila buka link.</div>';
-									}}
-								/>
-                                <a href={url} target="_blank" className="text-[10px] text-center text-indigo-600 font-bold hover:text-indigo-800 underline mt-2 block pb-1">Buka Fail Penuh</a>
-                            </div>
-                        ))}
+                        {items.map((it, i) => {
+                            const url = it.src;
+                            const thumb = url.startsWith("data:image") ? url : url.replace("https://drive.google.com/uc?export=view&id=", "https://drive.google.com/thumbnail?id=") + "&sz=w1000";
+                            return (
+                            <div key={i} className="border border-slate-200 p-1.5 rounded bg-white group shadow-sm print-break-inside-avoid">
+                                <img src={thumb} className="w-full h-32 object-cover rounded" alt={it.caption || "Lampiran"}
+                                    onError={e => { e.target.parentElement.innerHTML = '<div class="text-xs text-rose-500 flex h-full items-center justify-center font-medium bg-rose-50 rounded border border-rose-200">Gagal Paparan. Sila buka link.</div>'; }} />
+                                {it.caption && <div className="text-xs text-slate-700 font-medium text-center mt-2 px-1 leading-snug">{it.caption}</div>}
+                                <a href={url} target="_blank" className="no-print text-[10px] text-center text-indigo-600 font-bold hover:text-indigo-800 underline mt-2 block pb-1">Buka Fail Penuh</a>
+                            </div>);
+                        })}
                     </div>
                 </div>
             );
@@ -613,10 +705,11 @@
             );
         };
 
-        const AdminDashboard = ({ reports, onViewReport, role }) => {
+        const AdminDashboard = ({ reports, onViewReport, role, pending, onDecide }) => {
             const reportList = Object.values(reports).sort((a, b) => new Date(b.date) - new Date(a.date));
             return (
                 <div className="max-w-4xl mx-auto"><div className="mb-6"><h2 className="text-2xl font-bold text-white tracking-wide">{role === 'admin' ? 'Papan Pemuka Pentadbir' : 'Arkib Laporan'}</h2><p className="text-sm text-indigo-200 mt-1">Sila pilih laporan mengikut tarikh untuk disemak.</p></div>
+                    {role === 'admin' && pending && pending.length > 0 && <PendingTeachers pending={pending} onDecide={onDecide} />}
                     <div className="glass-panel overflow-hidden rounded-xl shadow-lg border-white/10"><div className="mobile-table-scroll"><table className="w-full min-w-[720px] text-left border-collapse">
                         <thead><tr className="bg-black/30 border-b border-white/10 text-slate-300 uppercase tracking-wider text-[11px]"><th className="p-4">Tarikh & Hari</th><th className="p-4 text-center">Minggu</th><th className="p-4 text-center">Tugasan Siap</th><th className="p-4 text-center">Status Laporan</th><th className="p-4 text-center">Tindakan</th></tr></thead>
                         <tbody>
@@ -638,56 +731,75 @@
         };
 
         const App = () => {
-            const [teachers, setTeachers] = React.useState([]); 
-			const [loading, setLoading] = React.useState(true); 
-			const [user, setUser] = React.useState(null); 
-			const [reports, setReports] = React.useState({}); 
-			const [view, setView] = React.useState('login'); 
-			const [date, setDate] = React.useState(getTodayMalaysia()); 
-			const [toast, setToast] = React.useState(null);
-            
-            React.useEffect(() => { fetch(GOOGLE_SCRIPT_URL).then(r=>r.json()).then(d=>{if(d.teachers)setTeachers(d.teachers);if(d.reports)setReports(d.reports);setLoading(false);}).catch(()=>setLoading(false)); }, []);
+            const [teachers, setTeachers] = React.useState([]);
+            const [loading, setLoading] = React.useState(true);
+            const [user, setUser] = React.useState(null);
+            const [auth, setAuth] = React.useState(null);
+            const [reports, setReports] = React.useState({});
+            const [pending, setPending] = React.useState([]);
+            const [view, setView] = React.useState('login');
+            const [date, setDate] = React.useState(getTodayMalaysia());
+            const [toast, setToast] = React.useState(null);
+            const [saving, setSaving] = React.useState(false);
+            const [editTarget, setEditTarget] = React.useState(null);
+            const [formKey, setFormKey] = React.useState(0);
+
+            const showToast = (m, ms = 3500) => { setToast(m); setTimeout(()=>setToast(null), ms); };
             const getDay = d => isNaN(new Date(d))?'':['AHAD','ISNIN','SELASA','RABU','KHAMIS','JUMAAT','SABTU'][new Date(d).getDay()];
-            const showToast = m => { setToast(m); setTimeout(()=>setToast(null), 3500); };
-            
+
+            const applyData = (d) => { if (d.reports) setReports(d.reports); setPending(d.pending || []); };
+            const startSession = (u, pin, d) => {
+                setUser(u); setAuth({ id: u.id, pin }); applyData(d);
+                try { sessionStorage.setItem('smkkt_session', JSON.stringify({ id: u.id, pin })); } catch(e) {}
+                setView(u.role === 'admin' ? 'admin' : 'mine');
+            };
+            const logout = () => { setUser(null); setAuth(null); setReports({}); setPending([]); try { sessionStorage.removeItem('smkkt_session'); } catch(e) {} setView('login'); };
+
+            // Muat senarai nama (tanpa IC) dan pulihkan sesi jika masih ada
+            React.useEffect(() => {
+                (async () => {
+                    try { const r = await fetch(GOOGLE_SCRIPT_URL); const d = await r.json(); if (d.teachers) setTeachers(d.teachers); } catch(e) {}
+                    try {
+                        const saved = JSON.parse(sessionStorage.getItem('smkkt_session') || 'null');
+                        if (saved) { const d = await api({ action: 'DATA', id: saved.id, pin: saved.pin }); startSession(d.user, saved.pin, d); }
+                    } catch(e) { try { sessionStorage.removeItem('smkkt_session'); } catch(e2) {} }
+                    setLoading(false);
+                })();
+            }, []);
+
+            const run = async (payload, okMsg) => {
+                try { const d = await api({ ...auth, ...payload }); applyData(d); showToast(okMsg || d.message); return true; }
+                catch (e) { if (e.status === 'auth') { showToast(e.message, 5000); logout(); } else showToast(e.message, 6000); return false; }
+            };
+
             const saveReport = async (dt, id, data, imageArray) => {
-                showToast('Muat naik data (sila tunggu 3-8 saat)...');
-                try {
-                    await fetch(GOOGLE_SCRIPT_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify({date:dt, day:getDay(dt), week:data.week, dutyId:id, teacherId:user.id, teacherName:user.name, taskData:data, images:imageArray})});
-                    
-                    // Update Local State for fast UI (Note: Image URLs won't be final Drive URLs until refresh, but UI flow works)
-                    setReports(p => {
-                        const n = p[dt] || {date:dt, day:getDay(dt), week:data.week, status:'pending', tasks:{}, teachers:[], admin_comments:[]};
-                        n.tasks[id] = {...data, images: imageArray, teacherName:user.name, teacherId:user.id};
-                        if(Object.keys(n.tasks).length === 5) n.status = 'completed';
-                        return {...p, [dt]: n};
-                    });
-                    showToast('Berjaya Disimpan!');
-                } catch(e) { showToast('Gagal.'); }
+                setSaving(true); showToast('Menyimpan... (gambar mungkin ambil 3-8 saat)', 8000);
+                const okSaved = await run({ action: 'SAVE_REPORT', date: dt, week: data.week, dutyId: id, taskData: data, images: imageArray });
+                setSaving(false);
+                if (okSaved) { setEditTarget(null); setView('mine'); }
+                return okSaved;
             };
-
-            const saveComment = async (txt) => {
-                showToast('Menyimpan ulasan...');
-                try {
-                    await fetch(GOOGLE_SCRIPT_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify({action:"SAVE_COMMENT", date:date, comment:txt, adminName:user.name})});
-                    setReports(p => {
-                        const n = {...p}; if(!n[date].admin_comments) n[date].admin_comments = [];
-                        n[date].admin_comments.push({name: user.name, comment: txt}); n[date].status = 'reviewed';
-                        return n;
-                    });
-                    showToast('Ulasan pentadbir disimpan!');
-                } catch(e) { showToast('Gagal.'); }
+            const deleteReport = async (dt, id, reviewed) => {
+                const msg = 'Padam laporan ' + formatDateDisplay(dt) + ' (Tugas ' + id + ')?' + (reviewed ? '\n\nLaporan ini sudah disemak pentadbir.' : '') + '\n\nTindakan ini tidak boleh dibatalkan.';
+                if (!window.confirm(msg)) return false;
+                showToast('Memadam...', 5000);
+                return run({ action: 'DELETE_REPORT', date: dt, dutyId: id });
             };
+            const saveComment = (txt) => run({ action: 'SAVE_COMMENT', date, comment: txt, week: reports[date]?.week }, 'Ulasan pentadbir disimpan!');
+            const decideTeacher = (targetId, decision) => run({ action: 'DECIDE_TEACHER', targetId, decision });
 
-            if (view === 'login') return <LoginScreen onLogin={u=>{setUser(u);setView(u.role==='admin'?'admin':'form');}} teachers={teachers} loading={loading} />;
+            const openForm = (target) => { setEditTarget(target); setFormKey(k => k + 1); setView('form'); };
+
+            if (view === 'login') return <LoginScreen onLogin={startSession} teachers={teachers} loading={loading} />;
             return (
                 <div className="min-h-screen flex flex-col pb-10">
                     {toast && <div className="fixed top-5 left-1/2 -translate-x-1/2 glass-panel bg-indigo-500/30 border-indigo-400 px-6 py-3.5 rounded-xl text-white z-50 animate-bounce text-sm shadow-[0_5px_30px_rgba(99,102,241,0.5)] font-bold flex items-center gap-3 backdrop-blur-xl"><i className="ph-fill ph-check-circle text-xl"></i> {toast}</div>}
-                    <nav className="glass-panel mx-4 mt-4 p-4 rounded-xl flex justify-between items-center z-10 shadow-lg"><div className="font-bold text-white flex items-center gap-3"><div className="bg-white/10 p-1 rounded-full"><img src="./LOGO-SMKKT.png" className="w-8 h-8 object-contain drop-shadow-md"/></div><span className="tracking-wide text-sm sm:text-base">SMK KEM TERENDAK</span></div><div className="flex items-center gap-3"><span className="hidden sm:flex items-center gap-1.5 text-sm bg-black/20 border border-white/5 px-3 py-1.5 rounded-lg font-medium"><i className="ph-fill ph-user text-indigo-300"></i> {user.name}</span>{view==='report'&&<button onClick={()=>setView(user.role==='admin'?'admin':'list')} className="text-sm bg-white/10 hover:bg-white/20 border border-white/10 px-4 py-1.5 rounded-lg transition font-medium flex items-center gap-1.5"><i className="ph-bold ph-arrow-left"></i> Kembali</button>}<button onClick={()=>{setUser(null);setView('login');}} className="text-sm bg-rose-500/40 hover:bg-rose-500/60 border border-rose-500/50 px-4 py-1.5 rounded-lg text-white transition font-medium flex items-center gap-1.5"><i className="ph-bold ph-sign-out"></i> Keluar</button></div></nav>
-                    {user.role === 'guru' && view !== 'report' && <div className="flex justify-center gap-3 mt-6 px-4"><button onClick={()=>setView('form')} className={`px-6 py-2.5 rounded-xl text-sm font-bold transition-all shadow-sm flex items-center gap-2 ${view==='form'?'glass-panel border-b-2 border-indigo-400 text-white shadow-[0_4px_20px_rgba(99,102,241,0.2)]':'bg-white/5 text-slate-400 hover:bg-white/10'}`}><i className="ph-bold ph-pencil-simple text-lg"></i> Isi Laporan</button><button onClick={()=>setView('list')} className={`px-6 py-2.5 rounded-xl text-sm font-bold transition-all shadow-sm flex items-center gap-2 ${view==='list'?'glass-panel border-b-2 border-indigo-400 text-white shadow-[0_4px_20px_rgba(99,102,241,0.2)]':'bg-white/5 text-slate-400 hover:bg-white/10'}`}><i className="ph-bold ph-files text-lg"></i> Papar Rekod</button></div>}
+                    <nav className="glass-panel mx-4 mt-4 p-4 rounded-xl flex justify-between items-center z-10 shadow-lg"><div className="font-bold text-white flex items-center gap-3"><div className="bg-white/10 p-1 rounded-full"><img src="./LOGO-SMKKT.png" className="w-8 h-8 object-contain drop-shadow-md"/></div><span className="tracking-wide text-sm sm:text-base">SMK KEM TERENDAK</span></div><div className="flex items-center gap-3"><span className="hidden sm:flex items-center gap-1.5 text-sm bg-black/20 border border-white/5 px-3 py-1.5 rounded-lg font-medium"><i className="ph-fill ph-user text-indigo-300"></i> {user.name}</span>{view==='report'&&<button onClick={()=>setView(user.role==='admin'?'admin':'list')} className="text-sm bg-white/10 hover:bg-white/20 border border-white/10 px-4 py-1.5 rounded-lg transition font-medium flex items-center gap-1.5"><i className="ph-bold ph-arrow-left"></i> Kembali</button>}<button onClick={logout} className="text-sm bg-rose-500/40 hover:bg-rose-500/60 border border-rose-500/50 px-4 py-1.5 rounded-lg text-white transition font-medium flex items-center gap-1.5"><i className="ph-bold ph-sign-out"></i> Keluar</button></div></nav>
+                    {user.role === 'guru' && view !== 'report' && (() => { const cls = (v)=>`px-5 py-2.5 rounded-xl text-sm font-bold transition-all shadow-sm flex items-center gap-2 ${view===v?'glass-panel border-b-2 border-indigo-400 text-white shadow-[0_4px_20px_rgba(99,102,241,0.2)]':'bg-white/5 text-slate-400 hover:bg-white/10'}`; return <div className="flex justify-center gap-2 sm:gap-3 mt-6 px-4 flex-wrap"><button onClick={()=>openForm(null)} className={cls('form')}><i className="ph-bold ph-pencil-simple text-lg"></i> Isi Laporan</button><button onClick={()=>setView('mine')} className={cls('mine')}><i className="ph-bold ph-folder-user text-lg"></i> Laporan Saya</button><button onClick={()=>setView('list')} className={cls('list')}><i className="ph-bold ph-files text-lg"></i> Papar Rekod</button></div>; })()}
                     <main className="p-4 max-w-5xl w-full mx-auto mt-4 relative z-0">
-                        {view === 'form' && <DutyForm user={user} saveReport={saveReport} reports={reports} getDayName={getDay} showToast={showToast} />}
-                        {(view === 'admin' || view === 'list') && <AdminDashboard reports={reports} role={user.role} onViewReport={d=>{setDate(d);setView('report');}} />}
+                        {view === 'form' && <DutyForm key={formKey} user={user} saveReport={saveReport} deleteReport={deleteReport} saving={saving} initial={editTarget} reports={reports} getDayName={getDay} showToast={showToast} />}
+                        {view === 'mine' && <MyReports reports={reports} user={user} onNew={()=>openForm(null)} onOpen={d=>{setDate(d);setView('report');}} onEdit={(d,id)=>openForm({date:d,dutyId:id})} onDelete={deleteReport} />}
+                        {(view === 'admin' || view === 'list') && <AdminDashboard reports={reports} role={user.role} pending={pending} onDecide={decideTeacher} onViewReport={d=>{setDate(d);setView('report');}} />}
                         {view === 'report' && <CombinedReport reportData={reports[date]} date={date} user={user} onSaveComment={saveComment} />}
                     </main>
 					<div className="text-center text-[10px] text-slate-500 mt-8 mb-4">
